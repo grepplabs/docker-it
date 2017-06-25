@@ -8,6 +8,7 @@ import (
 	dockerNetwork "github.com/docker/docker/api/types/network"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"io"
 	"io/ioutil"
 )
 
@@ -91,6 +92,12 @@ func (r *DockerClient) CreateContainer(containerName string, image string, env [
 		return body.ID, nil
 	}
 }
+
+func (r *DockerClient) StartContainer(containerID string) error {
+	options := dockerTypes.ContainerStartOptions{}
+	return r.client.ContainerStart(context.Background(), containerID, options)
+}
+
 func (r *DockerClient) GetNetworkIDByName(networkName string) (string, error) {
 	// https://docs.docker.com/engine/api/v1.29/#operation/NetworkList
 	networkFilters := dockerFilters.NewArgs()
@@ -118,4 +125,9 @@ func (r *DockerClient) CreateNetwork(networkName string) (string, error) {
 func (r *DockerClient) ConnectToNetwork(networkID string, containerID string, aliases []string) error {
 	options := &dockerNetwork.EndpointSettings{NetworkID: networkID, Aliases: aliases}
 	return r.client.NetworkConnect(context.Background(), networkID, containerID, options)
+}
+
+func (r *DockerClient) ContainerLogs(containerID string, follow bool) (io.ReadCloser, error) {
+	options := dockerTypes.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: follow}
+	return r.client.ContainerLogs(context.Background(), containerID, options)
 }

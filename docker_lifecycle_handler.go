@@ -1,7 +1,11 @@
 package dockerit
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"os"
+	"strings"
 	"sync"
 )
 
@@ -18,8 +22,8 @@ type DockerComponent struct {
 	ExposeEnvAsSystemProps bool
 	ConnectToNetwork       bool
 	FollowLogs             bool
-	BeforeStart            interface{}
-	AfterStart             interface{}
+	BeforeStart            Callback
+	AfterStart             Callback
 }
 
 func (r *DockerComponent) Accept(context EnvironmentContext) error {
@@ -27,13 +31,11 @@ func (r *DockerComponent) Accept(context EnvironmentContext) error {
 }
 
 type DockerLifecycleHandler struct {
-	dockerClient   *DockerClient
-	createdClients []*DockerClient
+	dockerClient *DockerClient
+	context      EnvironmentContext
 
-	context EnvironmentContext
-
-	// guard createdClients
-	mu sync.Mutex
+	destroyChannel chan struct{}
+	destroyOnce    sync.Once
 }
 
 func NewDockerLifecycleHandler(context EnvironmentContext) (*DockerLifecycleHandler, error) {
@@ -41,19 +43,11 @@ func NewDockerLifecycleHandler(context EnvironmentContext) (*DockerLifecycleHand
 	if err != nil {
 		return nil, err
 	}
-	createdClients := []*DockerClient{dockerClient}
-	return &DockerLifecycleHandler{dockerClient: dockerClient, createdClients: createdClients, context: context}, nil
+	return &DockerLifecycleHandler{dockerClient: dockerClient, destroyChannel: make(chan struct{}), context: context}, nil
 }
 
 func (r *DockerLifecycleHandler) Close() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	for _, createdClient := range r.createdClients {
-		// ignore close errors
-		createdClient.Close()
-	}
-	r.createdClients = []*DockerClient{}
+	r.dockerClient.Close()
 }
 
 func (r *DockerLifecycleHandler) Create(component *DockerComponent) error {
@@ -71,7 +65,7 @@ func (r *DockerLifecycleHandler) Create(component *DockerComponent) error {
 	if err := r.createDockerContainer(component); err != nil {
 		return err
 	}
-	// // log: component.containerId
+	// log: component.containerId
 	if component.ConnectToNetwork {
 		return r.connectToNetwork(component.containerID, component.Name)
 	}
@@ -79,7 +73,40 @@ func (r *DockerLifecycleHandler) Create(component *DockerComponent) error {
 	return nil
 }
 
-func (r *DockerLifecycleHandler) Start(component DockerComponent) error {
+func (r *DockerLifecycleHandler) Start(component *DockerComponent) error {
+	if component.containerID == "" {
+		if err := r.Create(component); err != nil {
+			return err
+		}
+	}
+	if running, err := r.isContainerRunning(component.containerID); err != nil {
+		return err
+	} else if running {
+		// log: container is running
+		return nil
+	}
+
+	if component.BeforeStart != nil {
+		if err := component.BeforeStart.Call(r.context); err != nil {
+			return err
+		}
+	}
+	if err := r.dockerClient.StartContainer(component.containerID); err != nil {
+		// try to fetch logs from container
+		r.fetchLogs(component.containerID, os.Stderr)
+		return err
+	}
+	if component.FollowLogs {
+		if err := r.followLogs(component.containerID, os.Stdout); err != nil {
+			return err
+		}
+	}
+	if component.AfterStart != nil {
+		if err := component.AfterStart.Call(r.context); err != nil {
+			return err
+
+		}
+	}
 	return nil
 }
 
@@ -96,18 +123,36 @@ func (r *DockerLifecycleHandler) Stop(component DockerComponent) error {
 }
 
 func (r *DockerLifecycleHandler) Destroy(component DockerComponent) error {
+	r.destroyOnce.Do(func() {
+		close(r.destroyChannel)
+	})
 	// TODO: should delete network if a new one (not default) was created
 	return nil
+}
+
+func (r *DockerLifecycleHandler) isContainerRunning(containerID string) (bool, error) {
+	if containerID == "" {
+		return false, errors.New("isContainerRunning: containerID must not be empty")
+	}
+	if container, err := r.dockerClient.GetContainerByID(containerID); err != nil {
+		return false, err
+	} else {
+		if container != nil {
+			return strings.ToLower(container.Status) == "up", nil
+		} else {
+			return false, fmt.Errorf("Container with ID %s does not exist", containerID)
+		}
+	}
 }
 
 func (r *DockerLifecycleHandler) containerExists(containerID string) (bool, error) {
 	if containerID != "" {
 		if container, err := r.dockerClient.GetContainerByID(containerID); err != nil {
+			return false, err
+		} else {
 			if container != nil {
 				return true, nil
 			}
-		} else {
-			return false, err
 		}
 	}
 	return false, nil
@@ -198,6 +243,45 @@ func (r *DockerLifecycleHandler) getNetworkName() string {
 		networkName += "-" + r.context.ID
 	}
 	return networkName
+}
+
+func (r *DockerLifecycleHandler) fetchLogs(containerID string, dst io.Writer) error {
+	reader, err := r.dockerClient.ContainerLogs(containerID, false)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(dst, reader)
+	return err
+}
+
+func (r *DockerLifecycleHandler) followLogs(containerID string, dst io.Writer) error {
+	followClient, err := NewDockerClient()
+	if err != nil {
+		return err
+	}
+	reader, err := followClient.ContainerLogs(containerID, true)
+	if err != nil {
+		return err
+	}
+	go func() {
+		defer followClient.Close()
+		for {
+			select {
+			case <-r.destroyChannel:
+				return
+			}
+		}
+
+	}()
+	go func() {
+		// TODO: prefix lines / e.g. special logger for each 'name'
+		// TODO: Writer to copy the log from
+		_, err = io.Copy(dst, reader)
+		if err != nil && err != io.EOF {
+			// TODO: log error
+		}
+	}()
+	return nil
 }
 
 func (r *DockerLifecycleHandler) getIP() string {

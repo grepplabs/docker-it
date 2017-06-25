@@ -3,8 +3,6 @@ package dockerit
 import (
 	"fmt"
 	"sync"
-	"github.com/docker/go-connections/nat"
-	"strconv"
 )
 
 type DockerComponent struct {
@@ -14,13 +12,14 @@ type DockerComponent struct {
 	Image                   string
 	ImageLocalOnly          bool
 	RemoveImageAfterDestroy bool
-	ExposedPorts            []Port
-	EnvironmentVariables    map[string]string
-	ExposeEnvAsSystemProps  bool
-	ConnectToNetwork        bool
-	FollowLogs              bool
-	BeforeStart             interface{}
-	AfterStart              interface{}
+	// TODO: rename ExposedPorts to PortBindings
+	ExposedPorts           []Port
+	EnvironmentVariables   map[string]string
+	ExposeEnvAsSystemProps bool
+	ConnectToNetwork       bool
+	FollowLogs             bool
+	BeforeStart            interface{}
+	AfterStart             interface{}
 }
 
 func (r *DockerComponent) Accept(context EnvironmentContext) error {
@@ -57,15 +56,15 @@ func (r *DockerLifecycleHandler) Close() {
 	r.createdClients = []*DockerClient{}
 }
 
-func (r *DockerLifecycleHandler) Create(component DockerComponent) error {
-	if exists, err := r.containerExists(component); err != nil {
+func (r *DockerLifecycleHandler) Create(component *DockerComponent) error {
+	if exists, err := r.containerExists(*component); err != nil {
 		return err
 	} else if exists {
 		// log: component name {} , container with id {} already exists
 		return nil
 	}
 
-	if err := r.checkOrPullDockerImage(component); err != nil {
+	if err := r.checkOrPullDockerImage(*component); err != nil {
 		return err
 	}
 
@@ -135,22 +134,24 @@ func (r *DockerLifecycleHandler) checkOrPullDockerImage(component DockerComponen
 	return nil
 }
 
-func (r *DockerLifecycleHandler) createDockerContainer(component DockerComponent) error {
-	containerName := r.getContainerName(component)
+func (r *DockerLifecycleHandler) createDockerContainer(component *DockerComponent) error {
+	containerName := r.getContainerName(*component)
+	ip := r.findPublicFacingIP()
 
-	exposedPorts := make(nat.PortSet)
+	portSpecs := make([]string, 0)
 	if component.ExposedPorts != nil {
 		for _, exposedPort := range component.ExposedPorts {
-			port, err := nat.NewPort("tcp", strconv.Itoa(exposedPort.ContainerPort))
-			if err != nil {
-				return err
-			}
-			exposedPorts[port] = struct{}{}
-
+			// ip:public:private/proto
+			portSpec := fmt.Sprintf("%s:%d:%d/%s", ip, exposedPort.HostPort, exposedPort.ContainerPort, "tcp")
+			portSpecs = append(portSpecs, portSpec)
 		}
 	}
-	r.dockerClient.CreateContainer(containerName, component.Image, nil, exposedPorts, nil)
-	return nil
+	if containerId, err := r.dockerClient.CreateContainer(containerName, component.Image, nil, portSpecs); err != nil {
+		return err
+	} else {
+		component.containerId = containerId
+		return nil
+	}
 }
 
 func (r *DockerLifecycleHandler) getContainerName(component DockerComponent) string {
@@ -159,4 +160,9 @@ func (r *DockerLifecycleHandler) getContainerName(component DockerComponent) str
 		containerName += "-" + r.context.ID
 	}
 	return containerName
+}
+
+func (r *DockerLifecycleHandler) findPublicFacingIP() string {
+	//TODO:
+	return "127.0.0.1"
 }

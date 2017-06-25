@@ -67,7 +67,12 @@ func (r *DockerClient) PullImage(image string) error {
 	return nil
 }
 
-func (r *DockerClient) CreateContainer(containerName string, image string, env []string, exposedPorts nat.PortSet, portBindings nat.PortMap) (string, error) {
+func (r *DockerClient) CreateContainer(containerName string, image string, env []string, portSpecs []string) (string, error) {
+	// ip:public:private/proto
+	exposedPorts, portBindings, err := nat.ParsePortSpecs(portSpecs)
+	if err != nil {
+		return "", err
+	}
 	config := dockerContainer.Config{
 		Image:        image,
 		Env:          env,

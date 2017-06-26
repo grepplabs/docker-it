@@ -10,10 +10,10 @@ import (
 
 type DockerLifecycleHandler struct {
 	dockerClient *DockerClient
-	context      EnvironmentContext
+	context      DockerEnvironmentContext
 }
 
-func NewDockerLifecycleHandler(context EnvironmentContext) (*DockerLifecycleHandler, error) {
+func NewDockerLifecycleHandler(context DockerEnvironmentContext) (*DockerLifecycleHandler, error) {
 	dockerClient, err := NewDockerClient()
 	if err != nil {
 		return nil, err
@@ -23,10 +23,10 @@ func NewDockerLifecycleHandler(context EnvironmentContext) (*DockerLifecycleHand
 }
 
 func (r *DockerLifecycleHandler) Close() {
+	for _, container := range r.context.containers {
+		container.StopFollowLogs()
+	}
 	r.dockerClient.Close()
-
-	// close(container.stopFollowLogsChannel)
-	// TODO: should stop follow-logs for all containers in the context
 }
 
 func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
@@ -89,20 +89,6 @@ func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 	return nil
 }
 
-func (r *DockerLifecycleHandler) Pause(container *DockerContainer) error {
-	if container.containerID == "" {
-		return nil
-	}
-	return r.dockerClient.PauseContainer(container.containerID)
-}
-
-func (r *DockerLifecycleHandler) Unpause(container *DockerContainer) error {
-	if container.containerID == "" {
-		return nil
-	}
-	return r.dockerClient.UnpauseContainer(container.containerID)
-}
-
 func (r *DockerLifecycleHandler) Stop(container *DockerContainer) error {
 	if container.containerID == "" {
 		return nil
@@ -118,9 +104,7 @@ func (r *DockerLifecycleHandler) Stop(container *DockerContainer) error {
 func (r *DockerLifecycleHandler) Destroy(container *DockerContainer) error {
 	//TODO: disallow Start() et.c operations after destroy
 	//TODO: could send to channel and doOnce is not required
-	container.stopFollowLogsOnce.Do(func() {
-		close(container.stopFollowLogsChannel)
-	})
+	container.StopFollowLogs()
 
 	if container.containerID == "" {
 		return nil
@@ -207,7 +191,9 @@ func (r *DockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocal
 
 func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContainer) error {
 	containerName := r.getContainerName(container.Name)
-	ip := r.getIP()
+	// bind on all interfaces
+	// TODO: can be provider as variable
+	ip := "0.0.0.0"
 
 	portSpecs := make([]string, 0)
 	if container.ExposedPorts != nil {
@@ -305,6 +291,8 @@ func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dst io.W
 	return nil
 }
 
-func (r *DockerLifecycleHandler) getIP() string {
-	return "0.0.0.0"
+func (r *DockerLifecycleHandler) getPublicFacingIP() string {
+	//TODO:  implement - required for host resolution in value resolver
+	//       or it can be provider as variable
+	return "127.0.0.1"
 }

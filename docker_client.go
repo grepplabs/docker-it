@@ -148,14 +148,6 @@ func (r *DockerClient) ContainerLogs(containerID string, follow bool) (io.ReadCl
 	return r.client.ContainerLogs(context.Background(), containerID, options)
 }
 
-func (r *DockerClient) PauseContainer(containerID string) error {
-	return r.client.ContainerPause(context.Background(), containerID)
-}
-
-func (r *DockerClient) UnpauseContainer(containerID string) error {
-	return r.client.ContainerUnpause(context.Background(), containerID)
-}
-
 func (r *DockerClient) StopContainer(containerID string) error {
 	return r.client.ContainerStop(context.Background(), containerID, nil)
 }

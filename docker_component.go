@@ -10,6 +10,7 @@ type DockerComponent struct {
 	ImageLocalOnly          bool
 	RemoveImageAfterDestroy bool
 	// TODO: rename ExposedPorts to PortBindings
+	// TODO: mount volumes ?
 	ExposedPorts           []Port
 	EnvironmentVariables   map[string]string
 	ExposeEnvAsSystemProps bool
@@ -22,13 +23,17 @@ type DockerComponent struct {
 type DockerContainer struct {
 	DockerComponent
 
-	// runtime
-	containerID string
-
+	containerID           string
 	stopFollowLogsChannel chan struct{}
 	stopFollowLogsOnce    sync.Once
 }
 
 func NewDockerContainer(component DockerComponent) *DockerContainer {
 	return &DockerContainer{DockerComponent: component, stopFollowLogsChannel: make(chan struct{}, 1)}
+}
+
+func (r *DockerContainer) StopFollowLogs() {
+	r.stopFollowLogsOnce.Do(func() {
+		close(r.stopFollowLogsChannel)
+	})
 }

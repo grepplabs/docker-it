@@ -42,10 +42,10 @@ func (r *DockerClient) GetContainerByID(containerID string) (*dockerTypes.Contai
 	return nil, nil
 }
 
-func (r *DockerClient) GetImageByName(image string) (*dockerTypes.ImageSummary, error) {
+func (r *DockerClient) GetImageByName(imageName string) (*dockerTypes.ImageSummary, error) {
 	// https://docs.docker.com/engine/api/v1.29/#operation/ImageList
 	imageFilters := dockerFilters.NewArgs()
-	imageFilters.Add("reference", image)
+	imageFilters.Add("reference", imageName)
 	options := dockerTypes.ImageListOptions{Filters: imageFilters}
 	if summaries, err := r.client.ImageList(context.Background(), options); err != nil {
 		return nil, err
@@ -57,9 +57,25 @@ func (r *DockerClient) GetImageByName(image string) (*dockerTypes.ImageSummary, 
 	return nil, nil
 }
 
-func (r *DockerClient) PullImage(image string) error {
+func (r *DockerClient) RemoveImageByName(imageName string) error {
+	if summary, err := r.GetImageByName(imageName); err != nil {
+		return err
+	} else if summary != nil {
+		return r.RemoveImage(summary.ID)
+	}
+	return nil
+}
+
+func (r *DockerClient) RemoveImage(imageID string) error {
+	options := dockerTypes.ImageRemoveOptions{}
+	_, err := r.client.ImageRemove(context.Background(), imageID, options)
+	return err
+
+}
+
+func (r *DockerClient) PullImage(imageName string) error {
 	options := dockerTypes.ImagePullOptions{}
-	resp, err := r.client.ImagePull(context.Background(), image, options)
+	resp, err := r.client.ImagePull(context.Background(), imageName, options)
 	if err != nil {
 		return err
 	}
@@ -130,4 +146,21 @@ func (r *DockerClient) ConnectToNetwork(networkID string, containerID string, al
 func (r *DockerClient) ContainerLogs(containerID string, follow bool) (io.ReadCloser, error) {
 	options := dockerTypes.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: follow}
 	return r.client.ContainerLogs(context.Background(), containerID, options)
+}
+
+func (r *DockerClient) PauseContainer(containerID string) error {
+	return r.client.ContainerPause(context.Background(), containerID)
+}
+
+func (r *DockerClient) UnpauseContainer(containerID string) error {
+	return r.client.ContainerUnpause(context.Background(), containerID)
+}
+
+func (r *DockerClient) StopContainer(containerID string) error {
+	return r.client.ContainerStop(context.Background(), containerID, nil)
+}
+
+func (r *DockerClient) RemoveContainer(containerID string) error {
+	options := dockerTypes.ContainerRemoveOptions{RemoveVolumes: true}
+	return r.client.ContainerRemove(context.Background(), containerID, options)
 }

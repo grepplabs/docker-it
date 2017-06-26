@@ -6,36 +6,11 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync"
 )
-
-type DockerComponent struct {
-	containerID string
-
-	Name                    string
-	Image                   string
-	ImageLocalOnly          bool
-	RemoveImageAfterDestroy bool
-	// TODO: rename ExposedPorts to PortBindings
-	ExposedPorts           []Port
-	EnvironmentVariables   map[string]string
-	ExposeEnvAsSystemProps bool
-	ConnectToNetwork       bool
-	FollowLogs             bool
-	BeforeStart            Callback
-	AfterStart             Callback
-}
-
-func (r *DockerComponent) Accept(context EnvironmentContext) error {
-	return nil
-}
 
 type DockerLifecycleHandler struct {
 	dockerClient *DockerClient
 	context      EnvironmentContext
-
-	destroyChannel chan struct{}
-	destroyOnce    sync.Once
 }
 
 func NewDockerLifecycleHandler(context EnvironmentContext) (*DockerLifecycleHandler, error) {
@@ -43,66 +18,70 @@ func NewDockerLifecycleHandler(context EnvironmentContext) (*DockerLifecycleHand
 	if err != nil {
 		return nil, err
 	}
-	return &DockerLifecycleHandler{dockerClient: dockerClient, destroyChannel: make(chan struct{}), context: context}, nil
+	// TODO: use EnvironmentContext to create a DockerEnvironment context
+	return &DockerLifecycleHandler{dockerClient: dockerClient, context: context}, nil
 }
 
 func (r *DockerLifecycleHandler) Close() {
 	r.dockerClient.Close()
+
+	// close(container.stopFollowLogsChannel)
+	// TODO: should stop follow-logs for all containers in the context
 }
 
-func (r *DockerLifecycleHandler) Create(component *DockerComponent) error {
-	if exists, err := r.containerExists(component.containerID); err != nil {
+func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
+	if exists, err := r.containerExists(container.containerID); err != nil {
 		return err
 	} else if exists {
 		// log: component name {} , container with id {} already exists
 		return nil
 	}
 
-	if err := r.checkOrPullDockerImage(component.Image, component.ImageLocalOnly); err != nil {
+	if err := r.checkOrPullDockerImage(container.Image, container.ImageLocalOnly); err != nil {
 		return err
 	}
 
-	if err := r.createDockerContainer(component); err != nil {
+	if err := r.createDockerContainer(container); err != nil {
 		return err
 	}
 	// log: component.containerId
-	if component.ConnectToNetwork {
-		return r.connectToNetwork(component.containerID, component.Name)
+	if container.ConnectToNetwork {
+		return r.connectToNetwork(container.containerID, container.Name)
 	}
 
 	return nil
 }
 
-func (r *DockerLifecycleHandler) Start(component *DockerComponent) error {
-	if component.containerID == "" {
-		if err := r.Create(component); err != nil {
+func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
+	if container.containerID == "" {
+		if err := r.Create(container); err != nil {
 			return err
 		}
 	}
-	if running, err := r.isContainerRunning(component.containerID); err != nil {
+	if running, err := r.isContainerRunning(container.containerID); err != nil {
 		return err
 	} else if running {
 		// log: container is running
 		return nil
 	}
 
-	if component.BeforeStart != nil {
-		if err := component.BeforeStart.Call(r.context); err != nil {
+	if container.BeforeStart != nil {
+		if err := container.BeforeStart.Call(r.context); err != nil {
 			return err
 		}
 	}
-	if err := r.dockerClient.StartContainer(component.containerID); err != nil {
+	if err := r.dockerClient.StartContainer(container.containerID); err != nil {
 		// try to fetch logs from container
-		r.fetchLogs(component.containerID, os.Stderr)
+		r.fetchLogs(container.containerID, os.Stderr)
 		return err
 	}
-	if component.FollowLogs {
-		if err := r.followLogs(component.containerID, os.Stdout); err != nil {
+	if container.FollowLogs {
+		if err := r.followLogs(container, os.Stdout); err != nil {
 			return err
 		}
 	}
-	if component.AfterStart != nil {
-		if err := component.AfterStart.Call(r.context); err != nil {
+	if container.AfterStart != nil {
+		if err := container.AfterStart.Call(r.context); err != nil {
 			return err
 
 		}
@@ -110,22 +89,64 @@ func (r *DockerLifecycleHandler) Start(component *DockerComponent) error {
 	return nil
 }
 
-func (r *DockerLifecycleHandler) Pause(component DockerComponent) error {
+func (r *DockerLifecycleHandler) Pause(container *DockerContainer) error {
+	if container.containerID == "" {
+		return nil
+	}
+	return r.dockerClient.PauseContainer(container.containerID)
+}
+
+func (r *DockerLifecycleHandler) Unpause(container *DockerContainer) error {
+	if container.containerID == "" {
+		return nil
+	}
+	return r.dockerClient.UnpauseContainer(container.containerID)
+}
+
+func (r *DockerLifecycleHandler) Stop(container *DockerContainer) error {
+	if container.containerID == "" {
+		return nil
+	}
+	if result, err := r.isContainerRunning(container.containerID); err != nil {
+		return err
+	} else if result {
+		return r.dockerClient.StopContainer(container.containerID)
+	}
 	return nil
 }
 
-func (r *DockerLifecycleHandler) Unpause(component DockerComponent) error {
-	return nil
-}
-
-func (r *DockerLifecycleHandler) Stop(component DockerComponent) error {
-	return nil
-}
-
-func (r *DockerLifecycleHandler) Destroy(component DockerComponent) error {
-	r.destroyOnce.Do(func() {
-		close(r.destroyChannel)
+func (r *DockerLifecycleHandler) Destroy(container *DockerContainer) error {
+	//TODO: disallow Start() et.c operations after destroy
+	//TODO: could send to channel and doOnce is not required
+	container.stopFollowLogsOnce.Do(func() {
+		close(container.stopFollowLogsChannel)
 	})
+
+	if container.containerID == "" {
+		return nil
+	}
+
+	if exists, err := r.containerExists(container.containerID); err != nil {
+		return err
+	} else if !exists {
+		return nil
+	}
+
+	if running, err := r.isContainerRunning(container.containerID); err != nil {
+		return err
+	} else if running {
+		r.Stop(container)
+	}
+
+	if err := r.dockerClient.RemoveContainer(container.containerID); err != nil {
+		return err
+	}
+
+	if container.RemoveImageAfterDestroy {
+		if err := r.dockerClient.RemoveImageByName(container.Image); err != nil {
+			return err
+		}
+	}
 	// TODO: should delete network if a new one (not default) was created
 	return nil
 }
@@ -184,28 +205,28 @@ func (r *DockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocal
 	return nil
 }
 
-func (r *DockerLifecycleHandler) createDockerContainer(component *DockerComponent) error {
-	containerName := r.getContainerName(component.Name)
+func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContainer) error {
+	containerName := r.getContainerName(container.Name)
 	ip := r.getIP()
 
 	portSpecs := make([]string, 0)
-	if component.ExposedPorts != nil {
-		for _, exposedPort := range component.ExposedPorts {
+	if container.ExposedPorts != nil {
+		for _, exposedPort := range container.ExposedPorts {
 			// ip:public:private/proto
 			portSpec := fmt.Sprintf("%s:%d:%d/%s", ip, exposedPort.HostPort, exposedPort.ContainerPort, "tcp")
 			portSpecs = append(portSpecs, portSpec)
 		}
 	}
 	env := make([]string, 0)
-	if component.EnvironmentVariables != nil {
-		for k, v := range component.EnvironmentVariables {
+	if container.EnvironmentVariables != nil {
+		for k, v := range container.EnvironmentVariables {
 			env = append(env, k+"="+v)
 		}
 	}
-	if containerID, err := r.dockerClient.CreateContainer(containerName, component.Image, env, portSpecs); err != nil {
+	if containerID, err := r.dockerClient.CreateContainer(containerName, container.Image, env, portSpecs); err != nil {
 		return err
 	} else {
-		component.containerID = containerID
+		container.containerID = containerID
 		return nil
 	}
 }
@@ -254,12 +275,12 @@ func (r *DockerLifecycleHandler) fetchLogs(containerID string, dst io.Writer) er
 	return err
 }
 
-func (r *DockerLifecycleHandler) followLogs(containerID string, dst io.Writer) error {
+func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dst io.Writer) error {
 	followClient, err := NewDockerClient()
 	if err != nil {
 		return err
 	}
-	reader, err := followClient.ContainerLogs(containerID, true)
+	reader, err := followClient.ContainerLogs(container.containerID, true)
 	if err != nil {
 		return err
 	}
@@ -267,7 +288,7 @@ func (r *DockerLifecycleHandler) followLogs(containerID string, dst io.Writer) e
 		defer followClient.Close()
 		for {
 			select {
-			case <-r.destroyChannel:
+			case <-container.stopFollowLogsChannel:
 				return
 			}
 		}

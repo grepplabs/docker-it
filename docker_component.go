@@ -28,6 +28,16 @@ type DockerContainer struct {
 	stopFollowLogsOnce    sync.Once
 }
 
+type Callback interface {
+	Call() error
+}
+
+type Port struct {
+	Name          string
+	ContainerPort int
+	HostPort      int
+}
+
 func NewDockerContainer(component DockerComponent) *DockerContainer {
 	return &DockerContainer{DockerComponent: component, stopFollowLogsChannel: make(chan struct{}, 1)}
 }

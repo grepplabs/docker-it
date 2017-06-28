@@ -153,6 +153,6 @@ func (r *DockerClient) StopContainer(containerID string) error {
 }
 
 func (r *DockerClient) RemoveContainer(containerID string) error {
-	options := dockerTypes.ContainerRemoveOptions{RemoveVolumes: true}
+	options := dockerTypes.ContainerRemoveOptions{RemoveVolumes: true, Force: true}
 	return r.client.ContainerRemove(context.Background(), containerID, options)
 }

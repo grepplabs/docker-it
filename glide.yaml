@@ -5,7 +5,9 @@ import:
   - api/types
   - api/types/container
   - api/types/filters
+  - api/types/network
   - client
 - package: github.com/docker/go-connections
   subpackages:
   - nat
+- package: github.com/google/uuid

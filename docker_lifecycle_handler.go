@@ -10,10 +10,10 @@ import (
 
 type DockerLifecycleHandler struct {
 	dockerClient *DockerClient
-	context      DockerEnvironmentContext
+	context      *DockerEnvironmentContext
 }
 
-func NewDockerLifecycleHandler(context DockerEnvironmentContext) (*DockerLifecycleHandler, error) {
+func NewDockerLifecycleHandler(context *DockerEnvironmentContext) (*DockerLifecycleHandler, error) {
 	dockerClient, err := NewDockerClient()
 	if err != nil {
 		return nil, err

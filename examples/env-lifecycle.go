@@ -10,6 +10,11 @@ func main() {
 		{
 			Name:  "redis-1",
 			Image: "redis",
+			ExposedPorts: []dit.Port{
+				{
+					ContainerPort: 6379,
+				},
+			},
 		},
 	}...)
 
@@ -20,7 +25,6 @@ func main() {
 	if err := env.Start("redis-1"); err != nil {
 		panic(err)
 	}
-	time.Sleep(5 * time.Second)
 
 	if err := env.Stop("redis-1"); err != nil {
 		panic(err)

@@ -16,17 +16,19 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 	// TODO: all properties and port resolution are collected
 	//       host, containerPort, targetPort, hostPort, port
 	// TODO: env variable can be a template and is resolved
-	// TODO: remember found host ports (prevent double assignemt)
-
-	// TODO: Port struct: name and containerPort are mandatory
 	// TODO: add shutdown hook
 
+	// new context
 	context := NewDockerEnvironmentContext()
 	for _, component := range components {
 		if err := context.addContainer(component); err != nil {
 			return nil, err
 		}
 	}
+	//TODO: public facing IP or variable
+	context.configurePortBindings("0.0.0.0")
+
+	// new lifecycle handler
 	lifecycleHandler, err := NewDockerLifecycleHandler(context)
 	if err != nil {
 		return nil, err
@@ -78,5 +80,6 @@ func (r *DockerEnvironment) Resolve(template string) (string, error) {
 	return "", nil
 }
 
-//TODO: find port bind on all interfaces (or variable)
 //TODO: take getPublicFacingIP
+
+

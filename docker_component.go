@@ -9,7 +9,6 @@ type DockerComponent struct {
 	Image                   string
 	ImageLocalOnly          bool
 	RemoveImageAfterDestroy bool
-	// TODO: rename ExposedPorts to PortBindings
 	// TODO: mount volumes ?
 	ExposedPorts           []Port
 	EnvironmentVariables   map[string]string
@@ -24,6 +23,8 @@ type DockerContainer struct {
 	DockerComponent
 
 	containerID           string
+	portBindings          []Port
+
 	stopFollowLogsChannel chan struct{}
 	stopFollowLogsOnce    sync.Once
 }

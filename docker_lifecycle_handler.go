@@ -196,10 +196,10 @@ func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContaine
 	ip := "0.0.0.0"
 
 	portSpecs := make([]string, 0)
-	if container.ExposedPorts != nil {
-		for _, exposedPort := range container.ExposedPorts {
+	if container.portBindings != nil {
+		for _, portBinding := range container.portBindings {
 			// ip:public:private/proto
-			portSpec := fmt.Sprintf("%s:%d:%d/%s", ip, exposedPort.HostPort, exposedPort.ContainerPort, "tcp")
+			portSpec := fmt.Sprintf("%s:%d:%d/%s", ip, portBinding.HostPort, portBinding.ContainerPort, "tcp")
 			portSpecs = append(portSpecs, portSpec)
 		}
 	}

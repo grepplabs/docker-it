@@ -1,0 +1,69 @@
+hash: 717d015a850f957aacb42273c4c1151d9a55fd9cad5d69f953a2c3d41591b5c9
+updated: 2017-06-27T23:38:21.853885018+02:00
+imports:
+- name: github.com/docker/distribution
+  version: caa175c71008fd3cf1fccf6c427f388d946b7750
+  subpackages:
+  - digestset
+  - reference
+- name: github.com/docker/docker
+  version: d311a3a681f918906249a1678eab0136ac663f6e
+  subpackages:
+  - api
+  - api/types
+  - api/types/blkiodev
+  - api/types/container
+  - api/types/events
+  - api/types/filters
+  - api/types/image
+  - api/types/mount
+  - api/types/network
+  - api/types/registry
+  - api/types/strslice
+  - api/types/swarm
+  - api/types/time
+  - api/types/versions
+  - api/types/volume
+  - client
+  - pkg/ioutils
+  - pkg/longpath
+  - pkg/mount
+  - pkg/system
+  - pkg/tlsconfig
+- name: github.com/docker/go-connections
+  version: 3ede32e2033de7505e6500d6c868c2b9ed9f169d
+  subpackages:
+  - nat
+  - sockets
+  - tlsconfig
+- name: github.com/docker/go-units
+  version: 0dadbb0345b35ec7ef35e228dabb8de89a65bf52
+- name: github.com/docker/libtrust
+  version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
+- name: github.com/google/uuid
+  version: 6a5e28554805e78ea6141142aba763936c4761c0
+- name: github.com/Microsoft/go-winio
+  version: f533f7a102197536779ea3a8cb881d639e21ec5a
+- name: github.com/opencontainers/go-digest
+  version: 279bed98673dd5bef374d3b6e4b09e2af76183bf
+- name: github.com/opencontainers/image-spec
+  version: af173bcb2fb0e0b95f240b914c4791f69738b765
+  subpackages:
+  - specs-go
+  - specs-go/v1
+- name: github.com/pkg/errors
+  version: c605e284fe17294bda444b34710735b29d1a9d90
+- name: github.com/Sirupsen/logrus
+  version: 3d4380f53a34dcdc95f0c1db702615992b38d9a4
+- name: golang.org/x/net
+  version: 5f8847ae0d0e90b6a9dc8148e7ad616874625171
+  subpackages:
+  - context
+  - context/ctxhttp
+  - proxy
+- name: golang.org/x/sys
+  version: c23410a886927bab8ca5e80b08af6a56faeb330d
+  subpackages:
+  - unix
+  - windows
+testImports: []

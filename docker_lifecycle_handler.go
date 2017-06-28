@@ -143,7 +143,7 @@ func (r *DockerLifecycleHandler) isContainerRunning(containerID string) (bool, e
 		return false, err
 	} else {
 		if container != nil {
-			return strings.ToLower(container.Status) == "up", nil
+			return strings.ToLower(container.State) == "running", nil
 		} else {
 			return false, fmt.Errorf("Container with ID %s does not exist", containerID)
 		}

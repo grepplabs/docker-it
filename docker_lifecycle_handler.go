@@ -46,7 +46,7 @@ func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
 	}
 	// log: component.containerId
 	if container.ConnectToNetwork {
-		return r.connectToNetwork(container.containerID, container.Name)
+		return r.connectToNetwork(container.containerID, toContainerName(container.Name))
 	}
 
 	return nil
@@ -237,11 +237,13 @@ func (r *DockerLifecycleHandler) getOrCreateNetwork() (string, error) {
 }
 
 func (r *DockerLifecycleHandler) getContainerName(name string) string {
-	containerName := name
+	var containerName string
 	if r.context.ID != "" {
-		containerName += "-" + r.context.ID
+		containerName += name + "-" + r.context.ID
+	} else {
+		containerName = name
 	}
-	return containerName
+	return toContainerName(containerName)
 }
 
 func (r *DockerLifecycleHandler) getNetworkName() string {

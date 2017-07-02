@@ -31,7 +31,8 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 	}
 
 	//TODO: public facing IP or variable
-	if err := context.configureEnv("127.0.0.1"); err != nil {
+	valueResolver := NewDockerComponentValueResolver(context.containers)
+	if err := valueResolver.configureContainersEnv("127.0.0.1"); err != nil {
 		return nil, err
 	}
 

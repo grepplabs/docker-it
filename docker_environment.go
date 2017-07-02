@@ -26,7 +26,14 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 		}
 	}
 	//TODO: public facing IP or variable
-	context.configurePortBindings("0.0.0.0")
+	if err := context.configurePortBindings("0.0.0.0"); err != nil {
+		return nil, err
+	}
+
+	//TODO: public facing IP or variable
+	if err := context.configureEnv("127.0.0.1"); err != nil {
+		return nil, err
+	}
 
 	// new lifecycle handler
 	lifecycleHandler, err := NewDockerLifecycleHandler(context)
@@ -81,5 +88,3 @@ func (r *DockerEnvironment) Resolve(template string) (string, error) {
 }
 
 //TODO: take getPublicFacingIP
-
-

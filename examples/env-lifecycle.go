@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	env, err := dit.NewDockerEnvironment([]dit.DockerComponent{
-		{
+	env, err := dit.NewDockerEnvironment(
+		dit.DockerComponent{
 			Name:  "redis-1",
 			Image: "redis",
 			ExposedPorts: []dit.Port{
@@ -15,8 +15,11 @@ func main() {
 					ContainerPort: 6379,
 				},
 			},
+			EnvironmentVariables: map[string]string {
+				"my-key": "my-value",
+			},
 		},
-	}...)
+	)
 
 	if err != nil {
 		panic(err)

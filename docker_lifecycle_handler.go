@@ -204,8 +204,8 @@ func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContaine
 		}
 	}
 	env := make([]string, 0)
-	if container.EnvironmentVariables != nil {
-		for k, v := range container.EnvironmentVariables {
+	if container.env != nil {
+		for k, v := range container.env {
 			env = append(env, k+"="+v)
 		}
 	}

@@ -22,8 +22,9 @@ type DockerComponent struct {
 type DockerContainer struct {
 	DockerComponent
 
-	containerID           string
-	portBindings          []Port
+	containerID  string
+	portBindings []Port
+	env          map[string]string
 
 	stopFollowLogsChannel chan struct{}
 	stopFollowLogsOnce    sync.Once

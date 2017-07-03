@@ -56,7 +56,7 @@ func main() {
 		panic(err)
 	}
 
-	time.Sleep(120 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	if err := env.Stop("redis-1"); err != nil {
 		panic(err)

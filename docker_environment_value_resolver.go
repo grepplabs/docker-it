@@ -15,17 +15,19 @@ const (
 	qualifierPort          = "Port"          // mapped port on host
 )
 
-type DockerComponentValueResolver struct {
+type DockerEnvironmentValueResolver struct {
+	ip         string
 	containers map[string]*DockerContainer
 }
 
-func NewDockerComponentValueResolver(containers map[string]*DockerContainer) *DockerComponentValueResolver {
-	return &DockerComponentValueResolver{
+func NewDockerComponentValueResolver(ip string, containers map[string]*DockerContainer) *DockerEnvironmentValueResolver {
+	return &DockerEnvironmentValueResolver{
+		ip:         ip,
 		containers: containers,
 	}
 }
 
-func (r *DockerComponentValueResolver) value(m map[string]interface{}, key string) (interface{}, error) {
+func (r *DockerEnvironmentValueResolver) value(m map[string]interface{}, key string) (interface{}, error) {
 	if val, ok := m[key]; !ok {
 		return nil, fmt.Errorf("Unknown key '%s'", key)
 	} else {
@@ -33,14 +35,11 @@ func (r *DockerComponentValueResolver) value(m map[string]interface{}, key strin
 	}
 }
 
-func (r *DockerComponentValueResolver) configureContainersEnv(host string) error {
+func (r *DockerEnvironmentValueResolver) configureContainersEnv() error {
 
-	contextVariables, err := r.getEnvironmentContextVariables(host)
+	contextVariables, err := r.getEnvironmentContextVariables()
 	if err != nil {
 		return err
-	}
-	var funcMap = template.FuncMap{
-		"value": r.value,
 	}
 	for containerName, container := range r.containers {
 		if container.EnvironmentVariables == nil {
@@ -48,18 +47,11 @@ func (r *DockerComponentValueResolver) configureContainersEnv(host string) error
 		}
 		env := make(map[string]string)
 		for k, v := range container.EnvironmentVariables {
-			t := template.New(fmt.Sprintf("DockerComponent %s Env %s", containerName, k)).Funcs(funcMap).Option("missingkey=error")
-
-			t, err := t.Parse(v)
+			value, err := r.resolveValue(fmt.Sprintf("DockerComponent %s Env %s", containerName, k), v, contextVariables)
 			if err != nil {
 				return err
 			}
-			var b bytes.Buffer
-			err = t.Execute(&b, &contextVariables)
-			if err != nil {
-				return err
-			}
-			env[k] = b.String()
+			env[k] = value
 		}
 		// assign env to container
 		container.env = env
@@ -67,7 +59,34 @@ func (r *DockerComponentValueResolver) configureContainersEnv(host string) error
 	return nil
 }
 
-func (r *DockerComponentValueResolver) getEnvironmentContextVariables(host string) (map[string]interface{}, error) {
+func (r *DockerEnvironmentValueResolver) resolve(templateText string) (string, error) {
+	contextVariables, err := r.getEnvironmentContextVariables()
+	if err != nil {
+		return "", err
+	}
+	return r.resolveValue("resolve", templateText, contextVariables)
+}
+
+func (r *DockerEnvironmentValueResolver) resolveValue(templateName string, templateText string, contextVariables map[string]interface{}) (string, error) {
+
+	var funcMap = template.FuncMap{
+		"value": r.value,
+	}
+
+	t := template.New(templateName).Funcs(funcMap).Option("missingkey=error")
+	t, err := t.Parse(templateText)
+	if err != nil {
+		return "", err
+	}
+	var b bytes.Buffer
+	err = t.Execute(&b, &contextVariables)
+	if err != nil {
+		return "", err
+	}
+	return b.String(), nil
+}
+
+func (r *DockerEnvironmentValueResolver) getEnvironmentContextVariables() (map[string]interface{}, error) {
 
 	result := make(map[string]interface{})
 
@@ -76,7 +95,7 @@ func (r *DockerComponentValueResolver) getEnvironmentContextVariables(host strin
 			return nil, fmt.Errorf("portBindings for '%s' is not defined", containerName)
 		}
 
-		result[fmt.Sprintf("%s.%s", containerName, qualifierHost)] = host
+		result[fmt.Sprintf("%s.%s", containerName, qualifierHost)] = r.ip
 
 		for _, port := range container.portBindings {
 			if port.Name == "" || port.Name == containerName {
@@ -102,10 +121,10 @@ func (r *DockerComponentValueResolver) getEnvironmentContextVariables(host strin
 				result[fmt.Sprintf("%s.%s", container.DockerComponent.Name, qualifierTargetPort)] = result[fmt.Sprintf("%s.%s", containerName, qualifierTargetPort)]
 			}
 			if exposedPorts.Name != "" {
-				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierPort)] = fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierPort)
-				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierHostPort)] = fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierHostPort)
-				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierContainerPort)] = fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierContainerPort)
-				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierTargetPort)] = fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierTargetPort)
+				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierPort)] = result[fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierPort)]
+				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierHostPort)] = result[fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierHostPort)]
+				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierContainerPort)] = result[fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierContainerPort)]
+				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierTargetPort)] = result[fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierTargetPort)]
 			}
 		}
 

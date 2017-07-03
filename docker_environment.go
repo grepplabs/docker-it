@@ -7,15 +7,13 @@ import (
 type DockerEnvironment struct {
 	context          *DockerEnvironmentContext
 	lifecycleHandler *DockerLifecycleHandler
+	valueResolver    *DockerEnvironmentValueResolver
 }
 
 func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, error) {
 	if len(components) == 0 {
 		return nil, errors.New("Component list is empty")
 	}
-	// TODO: all properties and port resolution are collected
-	//       host, containerPort, targetPort, hostPort, port
-	// TODO: env variable can be a template and is resolved
 	// TODO: add shutdown hook
 
 	// new context
@@ -31,8 +29,8 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 	}
 
 	//TODO: public facing IP or variable
-	valueResolver := NewDockerComponentValueResolver(context.containers)
-	if err := valueResolver.configureContainersEnv("127.0.0.1"); err != nil {
+	valueResolver := NewDockerComponentValueResolver("127.0.0.1", context.containers)
+	if err := valueResolver.configureContainersEnv(); err != nil {
 		return nil, err
 	}
 
@@ -41,7 +39,7 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 	if err != nil {
 		return nil, err
 	}
-	return &DockerEnvironment{context: context, lifecycleHandler: lifecycleHandler}, nil
+	return &DockerEnvironment{context: context, lifecycleHandler: lifecycleHandler, valueResolver: valueResolver}, nil
 }
 
 type dockerContainerCommand interface {
@@ -82,10 +80,8 @@ func (r *DockerEnvironment) Close() {
 	r.lifecycleHandler.Close()
 }
 
-// resolve template with registered variables e.g. ports
 func (r *DockerEnvironment) Resolve(template string) (string, error) {
-	//TODO: implement
-	return "", nil
+	return r.valueResolver.resolve(template)
 }
 
 //TODO: take getPublicFacingIP

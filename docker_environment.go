@@ -24,12 +24,13 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 		}
 	}
 	//TODO: public facing IP or variable
-	if err := context.configurePortBindings("0.0.0.0"); err != nil {
+	portBinding := NewDockerEnvironmentPortBinding("0.0.0.0", context)
+	if err := portBinding.configurePortBindings(); err != nil {
 		return nil, err
 	}
 
 	//TODO: public facing IP or variable
-	valueResolver := NewDockerComponentValueResolver("127.0.0.1", context.containers)
+	valueResolver := NewDockerComponentValueResolver("127.0.0.1", context)
 	if err := valueResolver.configureContainersEnv(); err != nil {
 		return nil, err
 	}

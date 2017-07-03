@@ -16,14 +16,14 @@ const (
 )
 
 type DockerEnvironmentValueResolver struct {
-	ip         string
-	containers map[string]*DockerContainer
+	ip      string
+	context *DockerEnvironmentContext
 }
 
-func NewDockerComponentValueResolver(ip string, containers map[string]*DockerContainer) *DockerEnvironmentValueResolver {
+func NewDockerComponentValueResolver(ip string, context *DockerEnvironmentContext) *DockerEnvironmentValueResolver {
 	return &DockerEnvironmentValueResolver{
-		ip:         ip,
-		containers: containers,
+		ip:      ip,
+		context: context,
 	}
 }
 
@@ -41,7 +41,7 @@ func (r *DockerEnvironmentValueResolver) configureContainersEnv() error {
 	if err != nil {
 		return err
 	}
-	for containerName, container := range r.containers {
+	for containerName, container := range r.context.containers {
 		if container.EnvironmentVariables == nil {
 			continue
 		}
@@ -90,7 +90,7 @@ func (r *DockerEnvironmentValueResolver) getEnvironmentContextVariables() (map[s
 
 	result := make(map[string]interface{})
 
-	for containerName, container := range r.containers {
+	for containerName, container := range r.context.containers {
 		if container.portBindings == nil {
 			return nil, fmt.Errorf("portBindings for '%s' is not defined", containerName)
 		}

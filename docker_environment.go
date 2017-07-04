@@ -2,7 +2,6 @@ package dockerit
 
 import (
 	"errors"
-	"net"
 )
 
 type DockerEnvironment struct {
@@ -16,23 +15,25 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 		return nil, errors.New("Component list is empty")
 	}
 	// new context
-	context := NewDockerEnvironmentContext()
+	context, err := NewDockerEnvironmentContext()
+	if err != nil {
+		return nil, err
+	}
 	for _, component := range components {
 		if err := context.addContainer(component); err != nil {
 			return nil, err
 		}
 	}
-	ip, err := externalIP()
 	if err != nil {
 		return nil, err
 	}
 	// we could use 0.0.0.0
-	portBinding := NewDockerEnvironmentPortBinding(ip, context)
+	portBinding := NewDockerEnvironmentPortBinding(context.externalIP, context)
 	if err := portBinding.configurePortBindings(); err != nil {
 		return nil, err
 	}
 
-	valueResolver := NewDockerComponentValueResolver(ip, context)
+	valueResolver := NewDockerComponentValueResolver(context.externalIP, context)
 	if err := valueResolver.configureContainersEnv(); err != nil {
 		return nil, err
 	}
@@ -86,42 +87,3 @@ func (r *DockerEnvironment) Close() {
 func (r *DockerEnvironment) Resolve(template string) (string, error) {
 	return r.valueResolver.resolve(template)
 }
-
-// https://play.golang.org/p/BDt3qEQ_2H
-func externalIP() (string, error) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return "", err
-	}
-	for _, iface := range ifaces {
-		if iface.Flags&net.FlagUp == 0 {
-			continue // interface down
-		}
-		if iface.Flags&net.FlagLoopback != 0 {
-			continue // loopback interface
-		}
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return "", err
-		}
-		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-			if ip == nil || ip.IsLoopback() {
-				continue
-			}
-			ip = ip.To4()
-			if ip == nil {
-				continue // not an ipv4 address
-			}
-			return ip.String(), nil
-		}
-	}
-	return "", errors.New("are you connected to the network?")
-}
-

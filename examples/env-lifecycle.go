@@ -3,6 +3,7 @@ package main
 import (
 	dit "github.com/cloud-42/docker-it"
 	"time"
+	"fmt"
 )
 
 func main() {
@@ -10,6 +11,7 @@ func main() {
 		dit.DockerComponent{
 			Name:  "redis-1",
 			Image: "redis",
+			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
 					Name:          "redis-1",
@@ -52,18 +54,21 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Println("Start container")
 	if err := env.Start("redis-1"); err != nil {
 		panic(err)
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(10 * time.Second)
 
+	fmt.Println("Stop container")
 	if err := env.Stop("redis-1"); err != nil {
 		panic(err)
 	}
 
 	time.Sleep(1 * time.Second)
 
+	fmt.Println("Destroy container")
 	if err := env.Destroy("redis-1"); err != nil {
 		panic(err)
 	}

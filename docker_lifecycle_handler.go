@@ -3,6 +3,7 @@ package dockerit
 import (
 	"errors"
 	"fmt"
+	"github.com/docker/docker/pkg/stdcopy"
 	"io"
 	"os"
 	"strings"
@@ -76,6 +77,7 @@ func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 		return err
 	}
 	if container.FollowLogs {
+
 		if err := r.followLogs(container, os.Stdout); err != nil {
 			return err
 		}
@@ -191,15 +193,12 @@ func (r *DockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocal
 
 func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContainer) error {
 	containerName := r.getContainerName(container.Name)
-	// bind on all interfaces
-	// TODO: can be provider as variable
-	ip := "0.0.0.0"
 
 	portSpecs := make([]string, 0)
 	if container.portBindings != nil {
 		for _, portBinding := range container.portBindings {
 			// ip:public:private/proto
-			portSpec := fmt.Sprintf("%s:%d:%d/%s", ip, portBinding.HostPort, portBinding.ContainerPort, "tcp")
+			portSpec := fmt.Sprintf("%s:%d:%d/%s", r.context.externalIP, portBinding.HostPort, portBinding.ContainerPort, "tcp")
 			portSpecs = append(portSpecs, portSpec)
 		}
 	}
@@ -259,7 +258,7 @@ func (r *DockerLifecycleHandler) fetchLogs(containerID string, dst io.Writer) er
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(dst, reader)
+	_, err = stdcopy.StdCopy(dst, dst, reader)
 	return err
 }
 
@@ -285,16 +284,10 @@ func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dst io.W
 	go func() {
 		// TODO: prefix lines / e.g. special logger for each 'name'
 		// TODO: Writer to copy the log from
-		_, err = io.Copy(dst, reader)
+		_, err = stdcopy.StdCopy(dst, dst, reader)
 		if err != nil && err != io.EOF {
 			// TODO: log error
 		}
 	}()
 	return nil
-}
-
-func (r *DockerLifecycleHandler) getPublicFacingIP() string {
-	//TODO:  implement - required for host resolution in value resolver
-	//       or it can be provider as variable
-	return "127.0.0.1"
 }

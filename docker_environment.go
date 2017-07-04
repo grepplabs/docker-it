@@ -2,6 +2,7 @@ package dockerit
 
 import (
 	"errors"
+	"net"
 )
 
 type DockerEnvironment struct {
@@ -14,8 +15,6 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 	if len(components) == 0 {
 		return nil, errors.New("Component list is empty")
 	}
-	// TODO: add shutdown hook
-
 	// new context
 	context := NewDockerEnvironmentContext()
 	for _, component := range components {
@@ -23,14 +22,17 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 			return nil, err
 		}
 	}
-	//TODO: public facing IP or variable
-	portBinding := NewDockerEnvironmentPortBinding("0.0.0.0", context)
+	ip, err := externalIP()
+	if err != nil {
+		return nil, err
+	}
+	// we could use 0.0.0.0
+	portBinding := NewDockerEnvironmentPortBinding(ip, context)
 	if err := portBinding.configurePortBindings(); err != nil {
 		return nil, err
 	}
 
-	//TODO: public facing IP or variable
-	valueResolver := NewDockerComponentValueResolver("127.0.0.1", context)
+	valueResolver := NewDockerComponentValueResolver(ip, context)
 	if err := valueResolver.configureContainersEnv(); err != nil {
 		return nil, err
 	}
@@ -85,4 +87,41 @@ func (r *DockerEnvironment) Resolve(template string) (string, error) {
 	return r.valueResolver.resolve(template)
 }
 
-//TODO: take getPublicFacingIP
+// https://play.golang.org/p/BDt3qEQ_2H
+func externalIP() (string, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", err
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+			return ip.String(), nil
+		}
+	}
+	return "", errors.New("are you connected to the network?")
+}
+

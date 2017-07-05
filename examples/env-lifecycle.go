@@ -32,6 +32,7 @@ func main() {
 		dit.DockerComponent{
 			Name:  "REDIS-2",
 			Image: "redis",
+			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
 					ContainerPort: 6379,
@@ -58,8 +59,12 @@ func main() {
 	if err := env.Start("redis-1"); err != nil {
 		panic(err)
 	}
+	fmt.Println("Start container 2")
+	if err := env.Start("redis-2"); err != nil {
+		panic(err)
+	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	fmt.Println("Stop container")
 	if err := env.Stop("redis-1"); err != nil {
@@ -68,8 +73,12 @@ func main() {
 
 	time.Sleep(1 * time.Second)
 
-	fmt.Println("Destroy container")
+	fmt.Println("Destroy container 1")
 	if err := env.Destroy("redis-1"); err != nil {
+		panic(err)
+	}
+	fmt.Println("Destroy container 2")
+	if err := env.Destroy("redis-2"); err != nil {
 		panic(err)
 	}
 }

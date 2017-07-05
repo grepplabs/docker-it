@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"log"
 )
 
 type DockerLifecycleHandler struct {
@@ -53,6 +54,12 @@ func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
 	return nil
 }
 
+type logWriter struct { *log.Logger }
+func (w logWriter) Write(b []byte) (int, error) {
+	w.Printf("%s", b)
+	return len(b), nil
+}
+
 func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 	if container.containerID == "" {
 		if err := r.Create(container); err != nil {
@@ -73,12 +80,12 @@ func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 	}
 	if err := r.dockerClient.StartContainer(container.containerID); err != nil {
 		// try to fetch logs from container
-		r.fetchLogs(container.containerID, os.Stderr)
+		r.fetchLogs(container.containerID, os.Stderr, os.Stderr)
 		return err
 	}
 	if container.FollowLogs {
-
-		if err := r.followLogs(container, os.Stdout); err != nil {
+		o := &logWriter{log.New(os.Stdout, fmt.Sprintf("%s: ", container.Name), 0)}
+		if err := r.followLogs(container, o, o); err != nil {
 			return err
 		}
 	}
@@ -253,20 +260,22 @@ func (r *DockerLifecycleHandler) getNetworkName() string {
 	return networkName
 }
 
-func (r *DockerLifecycleHandler) fetchLogs(containerID string, dst io.Writer) error {
+func (r *DockerLifecycleHandler) fetchLogs(containerID string, dstout, dsterr io.Writer) error {
 	reader, err := r.dockerClient.ContainerLogs(containerID, false)
 	if err != nil {
 		return err
 	}
-	_, err = stdcopy.StdCopy(dst, dst, reader)
+	_, err = stdcopy.StdCopy(dstout, dsterr, reader)
 	return err
 }
 
-func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dst io.Writer) error {
+func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dstout, dsterr io.Writer) error {
 	followClient, err := NewDockerClient()
 	if err != nil {
 		return err
 	}
+
+
 	reader, err := followClient.ContainerLogs(container.containerID, true)
 	if err != nil {
 		return err
@@ -284,7 +293,7 @@ func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dst io.W
 	go func() {
 		// TODO: prefix lines / e.g. special logger for each 'name'
 		// TODO: Writer to copy the log from
-		_, err = stdcopy.StdCopy(dst, dst, reader)
+		_, err = stdcopy.StdCopy(dstout, dsterr, reader)
 		if err != nil && err != io.EOF {
 			// TODO: log error
 		}

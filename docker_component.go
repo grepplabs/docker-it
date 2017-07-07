@@ -1,9 +1,5 @@
 package dockerit
 
-import (
-	"sync"
-)
-
 type DockerComponent struct {
 	Name                    string
 	Image                   string
@@ -27,7 +23,6 @@ type DockerContainer struct {
 	env          map[string]string
 
 	stopFollowLogsChannel chan struct{}
-	stopFollowLogsOnce    sync.Once
 }
 
 type Callback interface {
@@ -45,7 +40,10 @@ func NewDockerContainer(component DockerComponent) *DockerContainer {
 }
 
 func (r *DockerContainer) StopFollowLogs() {
-	r.stopFollowLogsOnce.Do(func() {
-		close(r.stopFollowLogsChannel)
-	})
+	// non-blocking send
+	select {
+	case r.stopFollowLogsChannel <- struct{}{}:
+	default:
+	}
+
 }

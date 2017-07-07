@@ -3,14 +3,13 @@ package main
 import (
 	dit "github.com/cloud-42/docker-it"
 	"time"
-	"fmt"
 )
 
 func main() {
 	env, err := dit.NewDockerEnvironment(
 		dit.DockerComponent{
-			Name:  "redis-1",
-			Image: "redis",
+			Name:       "redis-1",
+			Image:      "redis",
 			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
@@ -30,8 +29,8 @@ func main() {
 			},
 		},
 		dit.DockerComponent{
-			Name:  "REDIS-2",
-			Image: "redis",
+			Name:       "REDIS-2",
+			Image:      "redis",
 			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
@@ -55,29 +54,21 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("Start container")
-	if err := env.Start("redis-1"); err != nil {
-		panic(err)
-	}
-	fmt.Println("Start container 2")
-	if err := env.Start("redis-2"); err != nil {
+	if err := env.StartParallel("redis-1","redis-2"); err != nil {
 		panic(err)
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
-	fmt.Println("Stop container")
 	if err := env.Stop("redis-1"); err != nil {
 		panic(err)
 	}
 
 	time.Sleep(1 * time.Second)
 
-	fmt.Println("Destroy container 1")
 	if err := env.Destroy("redis-1"); err != nil {
 		panic(err)
 	}
-	fmt.Println("Destroy container 2")
 	if err := env.Destroy("redis-2"); err != nil {
 		panic(err)
 	}

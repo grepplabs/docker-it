@@ -10,6 +10,7 @@ import (
 
 type DockerEnvironmentContext struct {
 	ID         string
+	logger     *logger
 	externalIP string
 	containers map[string]*DockerContainer
 }
@@ -19,8 +20,10 @@ func NewDockerEnvironmentContext() (*DockerEnvironmentContext, error) {
 	if err != nil {
 		return nil, err
 	}
+	logger := newLogger()
+	logger.Info.Println("Using IP", externalIP)
 	id := uuid.New().String()
-	return &DockerEnvironmentContext{ID: id, externalIP: externalIP, containers: make(map[string]*DockerContainer)}, nil
+	return &DockerEnvironmentContext{ID: id, logger: logger, externalIP: externalIP, containers: make(map[string]*DockerContainer)}, nil
 }
 
 func toContainerName(name string) string {

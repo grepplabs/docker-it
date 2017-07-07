@@ -2,6 +2,7 @@ package dockerit
 
 import (
 	"errors"
+	"sync"
 )
 
 type DockerEnvironment struct {
@@ -55,7 +56,40 @@ func (r *DockerEnvironment) Start(names ...string) error {
 }
 
 func (r *DockerEnvironment) StartParallel(names ...string) error {
-	//TODO: implement
+	if (len(names)) == 0 {
+		return errors.New("No component was provided")
+	}
+
+	r.context.logger.Info.Println("Starting components in parallel", names)
+
+	var wg sync.WaitGroup
+	errorChannel := make(chan error, len(names))
+	doneChannel := make(chan struct{}, 1)
+
+	for _, name := range names {
+		wg.Add(1)
+		go func(name string) {
+			defer wg.Done()
+			err := r.Start(name)
+			if err != nil {
+				r.context.logger.Error.Println("Component start error", err)
+				errorChannel <- err
+			}
+		}(name)
+	}
+	go func() {
+		defer func() {
+			doneChannel <- struct{}{}
+		}()
+		wg.Wait()
+	}()
+
+	select {
+	case err := <-errorChannel:
+		return err
+	case <-doneChannel:
+	}
+	r.context.logger.Info.Println("All components started")
 	return nil
 }
 

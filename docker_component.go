@@ -1,9 +1,5 @@
 package dockerit
 
-import (
-	"time"
-)
-
 type DockerComponent struct {
 	Name                    string
 	Image                   string
@@ -44,9 +40,10 @@ func NewDockerContainer(component DockerComponent) *DockerContainer {
 }
 
 func (r *DockerContainer) StopFollowLogs() {
+	// non-blocking send
 	select {
 	case r.stopFollowLogsChannel <- struct{}{}:
-	case <-time.After(1 * time.Second):
+	default:
 	}
 
 }

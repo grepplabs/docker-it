@@ -54,14 +54,11 @@ func main() {
 		panic(err)
 	}
 
-	if err := env.Start("redis-1"); err != nil {
-		panic(err)
-	}
-	if err := env.Start("redis-2"); err != nil {
+	if err := env.StartParallel("redis-1","redis-2"); err != nil {
 		panic(err)
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	if err := env.Stop("redis-1"); err != nil {
 		panic(err)

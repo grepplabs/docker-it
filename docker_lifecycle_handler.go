@@ -22,6 +22,8 @@ func NewDockerLifecycleHandler(context *DockerEnvironmentContext) (*DockerLifecy
 }
 
 func (r *DockerLifecycleHandler) Close() {
+	r.context.logger.Info.Println("Closing docker lifecycle handler")
+
 	for _, container := range r.context.containers {
 		container.StopFollowLogs()
 	}

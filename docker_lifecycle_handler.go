@@ -109,8 +109,7 @@ func (r *DockerLifecycleHandler) Stop(container *DockerContainer) error {
 
 func (r *DockerLifecycleHandler) Destroy(container *DockerContainer) error {
 	r.context.logger.Info.Println("Destroy component", container.Name)
-	//TODO: disallow Start() et.c operations after destroy
-	//TODO: could send to channel and doOnce is not required
+
 	container.StopFollowLogs()
 
 	if container.containerID == "" {
@@ -281,13 +280,13 @@ func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dstout, 
 	if err != nil {
 		return err
 	}
-	r.context.logger.Info.Println("Start follow logs container", container.containerID)
+	r.context.logger.Info.Println("Start follow logs", container.containerID)
 	go func() {
 		defer followClient.Close()
 		for {
 			select {
 			case <-container.stopFollowLogsChannel:
-				r.context.logger.Info.Println("Stop follow logs container", container.containerID)
+				r.context.logger.Info.Println("Received stop follow logs", container.containerID)
 				return
 			}
 		}

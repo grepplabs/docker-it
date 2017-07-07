@@ -1,7 +1,7 @@
 package dockerit
 
 import (
-	"sync"
+	"time"
 )
 
 type DockerComponent struct {
@@ -27,7 +27,6 @@ type DockerContainer struct {
 	env          map[string]string
 
 	stopFollowLogsChannel chan struct{}
-	stopFollowLogsOnce    sync.Once
 }
 
 type Callback interface {
@@ -45,7 +44,9 @@ func NewDockerContainer(component DockerComponent) *DockerContainer {
 }
 
 func (r *DockerContainer) StopFollowLogs() {
-	r.stopFollowLogsOnce.Do(func() {
-		close(r.stopFollowLogsChannel)
-	})
+	select {
+	case r.stopFollowLogsChannel <- struct{}{}:
+	case <-time.After(1 * time.Second):
+	}
+
 }

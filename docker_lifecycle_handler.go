@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"github.com/docker/docker/pkg/stdcopy"
 	"io"
-	"os"
 	"strings"
-	"log"
 )
 
 type DockerLifecycleHandler struct {
@@ -20,7 +18,6 @@ func NewDockerLifecycleHandler(context *DockerEnvironmentContext) (*DockerLifecy
 	if err != nil {
 		return nil, err
 	}
-	// TODO: use EnvironmentContext to create a DockerEnvironment context
 	return &DockerLifecycleHandler{dockerClient: dockerClient, context: context}, nil
 }
 
@@ -35,7 +32,7 @@ func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
 	if exists, err := r.containerExists(container.containerID); err != nil {
 		return err
 	} else if exists {
-		// log: component name {} , container with id {} already exists
+		r.context.logger.Info.Println("Component", container.Name, "already exists, container", container.containerID)
 		return nil
 	}
 
@@ -46,7 +43,7 @@ func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
 	if err := r.createDockerContainer(container); err != nil {
 		return err
 	}
-	// log: component.containerId
+	r.context.logger.Info.Println("Created new container", container.containerID, "for", container.Name)
 	if container.ConnectToNetwork {
 		return r.connectToNetwork(container.containerID, toContainerName(container.Name))
 	}
@@ -54,13 +51,9 @@ func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
 	return nil
 }
 
-type logWriter struct { *log.Logger }
-func (w logWriter) Write(b []byte) (int, error) {
-	w.Printf("%s", b)
-	return len(b), nil
-}
-
 func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
+	r.context.logger.Info.Println("Start component", container.Name)
+
 	if container.containerID == "" {
 		if err := r.Create(container); err != nil {
 			return err
@@ -69,7 +62,7 @@ func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 	if running, err := r.isContainerRunning(container.containerID); err != nil {
 		return err
 	} else if running {
-		// log: container is running
+		r.context.logger.Info.Println("Container", container.containerID, "is running")
 		return nil
 	}
 
@@ -78,14 +71,16 @@ func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 			return err
 		}
 	}
+	r.context.logger.Info.Println("Starting container", container.containerID, "for", container.Name)
 	if err := r.dockerClient.StartContainer(container.containerID); err != nil {
 		// try to fetch logs from container
-		r.fetchLogs(container.containerID, os.Stderr, os.Stderr)
+		out := stdoutWriter(container.Name)
+		r.fetchLogs(container.containerID, out, out)
 		return err
 	}
 	if container.FollowLogs {
-		o := &logWriter{log.New(os.Stdout, fmt.Sprintf("%s: ", container.Name), 0)}
-		if err := r.followLogs(container, o, o); err != nil {
+		out := stdoutWriter(container.Name)
+		if err := r.followLogs(container, out, out); err != nil {
 			return err
 		}
 	}
@@ -99,6 +94,8 @@ func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 }
 
 func (r *DockerLifecycleHandler) Stop(container *DockerContainer) error {
+	r.context.logger.Info.Println("Stop component", container.Name)
+
 	if container.containerID == "" {
 		return nil
 	}
@@ -111,6 +108,7 @@ func (r *DockerLifecycleHandler) Stop(container *DockerContainer) error {
 }
 
 func (r *DockerLifecycleHandler) Destroy(container *DockerContainer) error {
+	r.context.logger.Info.Println("Destroy component", container.Name)
 	//TODO: disallow Start() et.c operations after destroy
 	//TODO: could send to channel and doOnce is not required
 	container.StopFollowLogs()
@@ -131,11 +129,13 @@ func (r *DockerLifecycleHandler) Destroy(container *DockerContainer) error {
 		r.Stop(container)
 	}
 
+	r.context.logger.Info.Println("Remove container", container.containerID)
 	if err := r.dockerClient.RemoveContainer(container.containerID); err != nil {
 		return err
 	}
 
 	if container.RemoveImageAfterDestroy {
+		r.context.logger.Info.Println("Remove image", container.Image)
 		if err := r.dockerClient.RemoveImageByName(container.Image); err != nil {
 			return err
 		}
@@ -187,6 +187,7 @@ func (r *DockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocal
 			return fmt.Errorf("Local images %s does not exist", image)
 		}
 	}
+	r.context.logger.Info.Println("Pulling image", image)
 	if err := r.dockerClient.PullImage(image); err != nil {
 		if imageExists {
 			// log: image cannot be pulled
@@ -215,6 +216,7 @@ func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContaine
 			env = append(env, k+"="+v)
 		}
 	}
+	r.context.logger.Info.Println("Creating container for", container.Name, "name", containerName, "env", env, "portSpecs", portSpecs)
 	if containerID, err := r.dockerClient.CreateContainer(containerName, container.Image, env, portSpecs); err != nil {
 		return err
 	} else {
@@ -275,27 +277,26 @@ func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dstout, 
 		return err
 	}
 
-
 	reader, err := followClient.ContainerLogs(container.containerID, true)
 	if err != nil {
 		return err
 	}
+	r.context.logger.Info.Println("Start follow logs container", container.containerID)
 	go func() {
 		defer followClient.Close()
 		for {
 			select {
 			case <-container.stopFollowLogsChannel:
+				r.context.logger.Info.Println("Stop follow logs container", container.containerID)
 				return
 			}
 		}
 
 	}()
 	go func() {
-		// TODO: prefix lines / e.g. special logger for each 'name'
-		// TODO: Writer to copy the log from
 		_, err = stdcopy.StdCopy(dstout, dsterr, reader)
 		if err != nil && err != io.EOF {
-			// TODO: log error
+			r.context.logger.Error.Println("Follow logs error", err)
 		}
 	}()
 	return nil

@@ -6,6 +6,17 @@ import (
 	"testing"
 )
 
+func TestNewDockerComponentValueResolver(t *testing.T) {
+	a := assert.New(t)
+
+	environmentContext, err := NewDockerEnvironmentContext()
+	a.Nil(err)
+	resolver := NewDockerComponentValueResolver("127.0.0.2", environmentContext)
+
+	a.Equal(environmentContext, resolver.context)
+	a.Equal("127.0.0.2", resolver.ip)
+}
+
 func TestEnvironmentContextVariablesNoContainers(t *testing.T) {
 	a := assert.New(t)
 
@@ -284,4 +295,19 @@ func TestConfigureContainersEnv(t *testing.T) {
 
 	a.Equal(`kafka://127.0.0.1:32402`, container2.env["KAFKA_TARGET"])
 	a.Equal(`redis-other://127.0.0.1:32401`, container2.env["REDIS_TARGET"])
+}
+
+func TestRequireContainerPortBindings(t *testing.T) {
+	a := assert.New(t)
+
+	environmentContext, err := NewDockerEnvironmentContext()
+	a.Nil(err)
+
+	_, err = environmentContext.addContainer(DockerComponent{Name: "REDIS", Image: "redis:latest"})
+	a.Nil(err)
+
+	resolver := &DockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
+	_, err = resolver.getEnvironmentContextVariables()
+	a.True(err != nil)
+	a.Equal(`portBindings for 'redis' is not defined`, err.Error())
 }

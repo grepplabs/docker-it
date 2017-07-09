@@ -21,7 +21,7 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 		return nil, err
 	}
 	for _, component := range components {
-		if err := context.addContainer(component); err != nil {
+		if _, err := context.addContainer(component); err != nil {
 			return nil, err
 		}
 	}

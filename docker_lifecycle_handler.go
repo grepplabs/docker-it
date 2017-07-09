@@ -229,7 +229,7 @@ func (r *DockerLifecycleHandler) getContainerName(name string) string {
 	} else {
 		containerName = name
 	}
-	return toContainerName(containerName)
+	return normalizeName(containerName)
 }
 
 func (r *DockerLifecycleHandler) getNetworkName() string {

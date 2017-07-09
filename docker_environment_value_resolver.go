@@ -3,7 +3,9 @@ package dockerit
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -60,9 +62,17 @@ func (r *DockerEnvironmentValueResolver) configureContainersEnv() error {
 }
 
 func (r *DockerEnvironmentValueResolver) resolve(templateText string) (string, error) {
-	contextVariables, err := r.getEnvironmentContextVariables()
+
+	contextVariables := r.getSystemContextVariables()
+
+	envContextVariables, err := r.getEnvironmentContextVariables()
 	if err != nil {
 		return "", err
+	} else {
+		// overwrites the same key
+		for k, v := range envContextVariables {
+			contextVariables[k] = v
+		}
 	}
 	return r.resolveValue("resolve", templateText, contextVariables)
 }
@@ -89,45 +99,56 @@ func (r *DockerEnvironmentValueResolver) resolveValue(templateName string, templ
 func (r *DockerEnvironmentValueResolver) getEnvironmentContextVariables() (map[string]interface{}, error) {
 
 	result := make(map[string]interface{})
-
 	for containerName, container := range r.context.containers {
 		if container.portBindings == nil {
 			return nil, fmt.Errorf("portBindings for '%s' is not defined", containerName)
 		}
-
-		result[fmt.Sprintf("%s.%s", containerName, qualifierHost)] = r.ip
-
-		for _, port := range container.portBindings {
-			if port.Name == "" || port.Name == containerName {
-				result[fmt.Sprintf("%s.%s", containerName, qualifierPort)] = strconv.Itoa(port.HostPort)
-				result[fmt.Sprintf("%s.%s", containerName, qualifierHostPort)] = strconv.Itoa(port.HostPort)
-				result[fmt.Sprintf("%s.%s", containerName, qualifierContainerPort)] = strconv.Itoa(port.ContainerPort)
-				result[fmt.Sprintf("%s.%s", containerName, qualifierTargetPort)] = strconv.Itoa(port.ContainerPort)
-			}
-			if port.Name != "" {
-				result[fmt.Sprintf("%s.%s.%s", containerName, port.Name, qualifierPort)] = strconv.Itoa(port.HostPort)
-				result[fmt.Sprintf("%s.%s.%s", containerName, port.Name, qualifierHostPort)] = strconv.Itoa(port.HostPort)
-				result[fmt.Sprintf("%s.%s.%s", containerName, port.Name, qualifierContainerPort)] = strconv.Itoa(port.ContainerPort)
-				result[fmt.Sprintf("%s.%s.%s", containerName, port.Name, qualifierTargetPort)] = strconv.Itoa(port.ContainerPort)
-			}
-		}
-
-		// original names (no lowercase)
-		for _, exposedPorts := range container.DockerComponent.ExposedPorts {
-			if exposedPorts.Name == "" || toPortName(exposedPorts.Name) == toContainerName(containerName) {
-				result[fmt.Sprintf("%s.%s", container.DockerComponent.Name, qualifierPort)] = result[fmt.Sprintf("%s.%s", containerName, qualifierPort)]
-				result[fmt.Sprintf("%s.%s", container.DockerComponent.Name, qualifierHostPort)] = result[fmt.Sprintf("%s.%s", containerName, qualifierHostPort)]
-				result[fmt.Sprintf("%s.%s", container.DockerComponent.Name, qualifierContainerPort)] = result[fmt.Sprintf("%s.%s", containerName, qualifierContainerPort)]
-				result[fmt.Sprintf("%s.%s", container.DockerComponent.Name, qualifierTargetPort)] = result[fmt.Sprintf("%s.%s", containerName, qualifierTargetPort)]
-			}
-			if exposedPorts.Name != "" {
-				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierPort)] = result[fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierPort)]
-				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierHostPort)] = result[fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierHostPort)]
-				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierContainerPort)] = result[fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierContainerPort)]
-				result[fmt.Sprintf("%s.%s.%s", container.DockerComponent.Name, exposedPorts.Name, qualifierTargetPort)] = result[fmt.Sprintf("%s.%s.%s", containerName, toPortName(exposedPorts.Name), qualifierTargetPort)]
-			}
-		}
-
+		r.appendContainerContextVariables(container.DockerComponent.Name, r.ip, result, container)
+		r.appendContainerContextVariables(containerName, r.ip, result, container)
 	}
 	return result, nil
+}
+
+func (r *DockerEnvironmentValueResolver) appendContainerContextVariables(name string, ip string, result map[string]interface{}, container *DockerContainer) {
+	result[fmt.Sprintf("%s.%s", name, qualifierHost)] = ip
+
+	for _, port := range container.portBindings {
+		if port.Name == "" || normalizeName(port.Name) == normalizeName(name) {
+			result[fmt.Sprintf("%s.%s", name, qualifierPort)] = strconv.Itoa(port.HostPort)
+			result[fmt.Sprintf("%s.%s", name, qualifierHostPort)] = strconv.Itoa(port.HostPort)
+			result[fmt.Sprintf("%s.%s", name, qualifierContainerPort)] = strconv.Itoa(port.ContainerPort)
+			result[fmt.Sprintf("%s.%s", name, qualifierTargetPort)] = strconv.Itoa(port.ContainerPort)
+		}
+		if port.Name != "" {
+			result[fmt.Sprintf("%s.%s.%s", name, port.Name, qualifierPort)] = strconv.Itoa(port.HostPort)
+			result[fmt.Sprintf("%s.%s.%s", name, port.Name, qualifierHostPort)] = strconv.Itoa(port.HostPort)
+			result[fmt.Sprintf("%s.%s.%s", name, port.Name, qualifierContainerPort)] = strconv.Itoa(port.ContainerPort)
+			result[fmt.Sprintf("%s.%s.%s", name, port.Name, qualifierTargetPort)] = strconv.Itoa(port.ContainerPort)
+		}
+	}
+
+	// original names (no lowercase)
+	for _, exposedPorts := range container.DockerComponent.ExposedPorts {
+		if exposedPorts.Name == "" || normalizeName(exposedPorts.Name) == normalizeName(name) {
+			result[fmt.Sprintf("%s.%s", name, qualifierPort)] = result[fmt.Sprintf("%s.%s", name, qualifierPort)]
+			result[fmt.Sprintf("%s.%s", name, qualifierHostPort)] = result[fmt.Sprintf("%s.%s", name, qualifierHostPort)]
+			result[fmt.Sprintf("%s.%s", name, qualifierContainerPort)] = result[fmt.Sprintf("%s.%s", name, qualifierContainerPort)]
+			result[fmt.Sprintf("%s.%s", name, qualifierTargetPort)] = result[fmt.Sprintf("%s.%s", name, qualifierTargetPort)]
+		}
+		if exposedPorts.Name != "" {
+			result[fmt.Sprintf("%s.%s.%s", name, exposedPorts.Name, qualifierPort)] = result[fmt.Sprintf("%s.%s.%s", name, normalizeName(exposedPorts.Name), qualifierPort)]
+			result[fmt.Sprintf("%s.%s.%s", name, exposedPorts.Name, qualifierHostPort)] = result[fmt.Sprintf("%s.%s.%s", name, normalizeName(exposedPorts.Name), qualifierHostPort)]
+			result[fmt.Sprintf("%s.%s.%s", name, exposedPorts.Name, qualifierContainerPort)] = result[fmt.Sprintf("%s.%s.%s", name, normalizeName(exposedPorts.Name), qualifierContainerPort)]
+			result[fmt.Sprintf("%s.%s.%s", name, exposedPorts.Name, qualifierTargetPort)] = result[fmt.Sprintf("%s.%s.%s", name, normalizeName(exposedPorts.Name), qualifierTargetPort)]
+		}
+	}
+}
+
+func (r *DockerEnvironmentValueResolver) getSystemContextVariables() map[string]interface{} {
+	result := make(map[string]interface{})
+	for _, e := range os.Environ() {
+		pair := strings.Split(e, "=")
+		result[pair[0]] = pair[1]
+	}
+	return result
 }

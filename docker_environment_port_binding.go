@@ -3,7 +3,6 @@ package dockerit
 import (
 	"fmt"
 	"net"
-	"strings"
 )
 
 type DockerEnvironmentPortBinding struct {
@@ -55,7 +54,7 @@ func (r *DockerEnvironmentPortBinding) getNormalizedExposedPorts() (map[string][
 						containerName, exposedPort.ContainerPort)
 				}
 
-				portName := toPortName(exposedPort.Name)
+				portName := normalizeName(exposedPort.Name)
 				if portName == "" {
 					portName = containerName
 				}
@@ -78,9 +77,6 @@ func (r *DockerEnvironmentPortBinding) getNormalizedExposedPorts() (map[string][
 		componentPorts[containerName] = ports
 	}
 	return componentPorts, nil
-}
-func toPortName(name string) string {
-	return strings.ToLower(name)
 }
 
 func getPortBindings(host string, componentPorts map[string][]Port) (map[string][]Port, error) {

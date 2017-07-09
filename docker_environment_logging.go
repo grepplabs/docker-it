@@ -8,7 +8,7 @@ import (
 
 type logWriter struct{ *log.Logger }
 
-// implement io.Writer interface
+// implements io.Writer interface
 func (w logWriter) Write(b []byte) (int, error) {
 	w.Printf("%s", b)
 	return len(b), nil

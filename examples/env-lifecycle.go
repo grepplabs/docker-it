@@ -54,7 +54,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := env.StartParallel("redis-1","redis-2"); err != nil {
+	if err := env.StartParallel("redis-1", "redis-2"); err != nil {
 		panic(err)
 	}
 

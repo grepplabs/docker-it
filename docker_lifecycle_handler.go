@@ -46,9 +46,6 @@ func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
 		return err
 	}
 	r.context.logger.Info.Println("Created new container", container.containerID, "for", container.Name)
-	if container.ConnectToNetwork {
-		return r.connectToNetwork(container.containerID, toContainerName(container.Name))
-	}
 
 	return nil
 }
@@ -141,7 +138,6 @@ func (r *DockerLifecycleHandler) Destroy(container *DockerContainer) error {
 			return err
 		}
 	}
-	// TODO: should delete network if a new one (not default) was created
 	return nil
 }
 
@@ -226,25 +222,6 @@ func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContaine
 	}
 }
 
-func (r *DockerLifecycleHandler) connectToNetwork(containerID string, name string) error {
-	networkID, err := r.getOrCreateNetwork()
-	if err != nil {
-		return err
-	} else {
-		return r.dockerClient.ConnectToNetwork(networkID, containerID, []string{name})
-	}
-}
-func (r *DockerLifecycleHandler) getOrCreateNetwork() (string, error) {
-	networkName := r.getNetworkName()
-	networkID, err := r.dockerClient.GetNetworkIDByName(networkName)
-	if err != nil {
-		return "", err
-	} else if networkID == "" {
-		return r.dockerClient.CreateNetwork(networkName)
-	}
-	return networkID, nil
-}
-
 func (r *DockerLifecycleHandler) getContainerName(name string) string {
 	var containerName string
 	if r.context.ID != "" {
@@ -252,7 +229,7 @@ func (r *DockerLifecycleHandler) getContainerName(name string) string {
 	} else {
 		containerName = name
 	}
-	return toContainerName(containerName)
+	return normalizeName(containerName)
 }
 
 func (r *DockerLifecycleHandler) getNetworkName() string {

@@ -5,14 +5,11 @@ type DockerComponent struct {
 	Image                   string
 	ImageLocalOnly          bool
 	RemoveImageAfterDestroy bool
-	// TODO: mount volumes ?
-	ExposedPorts           []Port
-	EnvironmentVariables   map[string]string
-	ExposeEnvAsSystemProps bool
-	ConnectToNetwork       bool
-	FollowLogs             bool
-	BeforeStart            Callback
-	AfterStart             Callback
+	ExposedPorts            []Port
+	EnvironmentVariables    map[string]string
+	FollowLogs              bool
+	BeforeStart             Callback
+	AfterStart              Callback
 }
 
 type DockerContainer struct {
@@ -40,10 +37,8 @@ func NewDockerContainer(component DockerComponent) *DockerContainer {
 }
 
 func (r *DockerContainer) StopFollowLogs() {
-	// non-blocking send
 	select {
 	case r.stopFollowLogsChannel <- struct{}{}:
 	default:
 	}
-
 }

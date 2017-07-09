@@ -5,7 +5,6 @@ import (
 	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
-	dockerNetwork "github.com/docker/docker/api/types/network"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"io"
@@ -112,35 +111,6 @@ func (r *DockerClient) CreateContainer(containerName string, image string, env [
 func (r *DockerClient) StartContainer(containerID string) error {
 	options := dockerTypes.ContainerStartOptions{}
 	return r.client.ContainerStart(context.Background(), containerID, options)
-}
-
-func (r *DockerClient) GetNetworkIDByName(networkName string) (string, error) {
-	// https://docs.docker.com/engine/api/v1.29/#operation/NetworkList
-	networkFilters := dockerFilters.NewArgs()
-	networkFilters.Add("name", networkName)
-	options := dockerTypes.NetworkListOptions{Filters: networkFilters}
-	if networkResources, err := r.client.NetworkList(context.Background(), options); err != nil {
-		return "", err
-	} else {
-		if len(networkResources) != 0 {
-			return networkResources[0].ID, nil
-		}
-	}
-	return "", nil
-}
-
-func (r *DockerClient) CreateNetwork(networkName string) (string, error) {
-	options := dockerTypes.NetworkCreate{}
-	if response, err := r.client.NetworkCreate(context.Background(), networkName, options); err != nil {
-		return "", err
-	} else {
-		return response.ID, nil
-	}
-}
-
-func (r *DockerClient) ConnectToNetwork(networkID string, containerID string, aliases []string) error {
-	options := &dockerNetwork.EndpointSettings{NetworkID: networkID, Aliases: aliases}
-	return r.client.NetworkConnect(context.Background(), networkID, containerID, options)
 }
 
 func (r *DockerClient) ContainerLogs(containerID string, follow bool) (io.ReadCloser, error) {

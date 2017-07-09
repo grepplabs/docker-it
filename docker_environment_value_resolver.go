@@ -3,7 +3,9 @@ package dockerit
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -60,9 +62,17 @@ func (r *DockerEnvironmentValueResolver) configureContainersEnv() error {
 }
 
 func (r *DockerEnvironmentValueResolver) resolve(templateText string) (string, error) {
-	contextVariables, err := r.getEnvironmentContextVariables()
+
+	contextVariables := r.getSystemContextVariables()
+
+	envContextVariables, err := r.getEnvironmentContextVariables()
 	if err != nil {
 		return "", err
+	} else {
+		// overwrites the same key
+		for k, v := range envContextVariables {
+			contextVariables[k] = v
+		}
 	}
 	return r.resolveValue("resolve", templateText, contextVariables)
 }
@@ -130,4 +140,13 @@ func (r *DockerEnvironmentValueResolver) getEnvironmentContextVariables() (map[s
 
 	}
 	return result, nil
+}
+
+func (r *DockerEnvironmentValueResolver) getSystemContextVariables() map[string]interface{} {
+	result := make(map[string]interface{})
+	for _, e := range os.Environ() {
+		pair := strings.Split(e, "=")
+		result[pair[0]] = pair[1]
+	}
+	return result
 }

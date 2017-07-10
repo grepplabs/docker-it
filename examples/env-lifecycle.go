@@ -49,7 +49,6 @@ func main() {
 			},
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}
@@ -60,16 +59,10 @@ func main() {
 
 	time.Sleep(5 * time.Second)
 
-	if err := env.Stop("redis-1"); err != nil {
-		panic(err)
-	}
-
-	time.Sleep(1 * time.Second)
-
-	if err := env.Destroy("redis-1"); err != nil {
-		panic(err)
-	}
-	if err := env.Destroy("redis-2"); err != nil {
-		panic(err)
-	}
+	env.Shutdown(func() {
+		err := env.Stop("redis-1")
+		if err != nil {
+			panic(err)
+		}
+	})
 }

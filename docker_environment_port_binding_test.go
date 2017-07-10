@@ -2,8 +2,8 @@ package dockerit
 
 import (
 	"github.com/stretchr/testify/assert"
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestGetNormalizedExposedPortsWhenNoPortsAreExposed(t *testing.T) {
@@ -154,9 +154,9 @@ func TestPortBindings(t *testing.T) {
 	}}
 	portBindings, err := getPortBindings("0.0.0.0", componentPorts)
 	a.Nil(err)
-	a.Equal(1,len(portBindings))
+	a.Equal(1, len(portBindings))
 	ports := portBindings["myapp"]
-	a.Equal(4,len(ports))
+	a.Equal(4, len(ports))
 
 	port := ports[0]
 	a.Equal("myapp", port.Name)
@@ -223,11 +223,11 @@ func TestConfigurePortBinding(t *testing.T) {
 	a.Equal(1, len(binding1))
 	a.Equal("redis", binding1[0].Name)
 	a.Equal(6379, binding1[0].ContainerPort)
-	a.True(binding1[0].HostPort > 0 )
+	a.True(binding1[0].HostPort > 0)
 
 	binding2 := container2.portBindings
 	a.Equal(1, len(binding2))
 	a.Equal("kafka", binding2[0].Name)
 	a.Equal(9094, binding2[0].ContainerPort)
-	a.True(binding2[0].HostPort > 0 )
+	a.True(binding2[0].HostPort > 0)
 }

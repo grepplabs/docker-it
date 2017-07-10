@@ -128,8 +128,10 @@ func (r *DockerEnvironment) Resolve(template string) (string, error) {
 	return r.valueResolver.resolve(template)
 }
 
-func (r *DockerEnvironment) WithShutdown(beforeShutdown ...func()) {
+func (r *DockerEnvironment) WithShutdown(beforeShutdown ...func()) chan struct{} {
+	doneChannel := make(chan struct{}, 1)
 	signalChannel := make(chan error)
+
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
@@ -141,8 +143,14 @@ func (r *DockerEnvironment) WithShutdown(beforeShutdown ...func()) {
 		case err := <-signalChannel:
 			r.context.logger.Info.Println("Received shutdown", err)
 			r.Shutdown(beforeShutdown...)
+
+			select {
+			case doneChannel <- struct{}{}:
+			default:
+			}
 		}
 	}()
+	return doneChannel
 }
 
 func (r *DockerEnvironment) Shutdown(beforeShutdown ...func()) {

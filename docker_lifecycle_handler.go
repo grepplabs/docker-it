@@ -61,7 +61,7 @@ func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 	if running, err := r.isContainerRunning(container.containerID); err != nil {
 		return err
 	} else if running {
-		r.context.logger.Info.Println("Container", container.containerID, "is running")
+		r.context.logger.Info.Println("Component", container.Name, "is already running", container.containerID)
 		return nil
 	}
 

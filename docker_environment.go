@@ -2,13 +2,19 @@ package dockerit
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
 
 type DockerEnvironment struct {
 	context          *DockerEnvironmentContext
 	lifecycleHandler *DockerLifecycleHandler
 	valueResolver    *DockerEnvironmentValueResolver
+
+	shutdownOnce sync.Once
 }
 
 func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, error) {
@@ -120,4 +126,38 @@ func (r *DockerEnvironment) Close() {
 
 func (r *DockerEnvironment) Resolve(template string) (string, error) {
 	return r.valueResolver.resolve(template)
+}
+
+func (r *DockerEnvironment) WithShutdown(beforeShutdown ...func()) {
+	signalChannel := make(chan error)
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+		signalChannel <- fmt.Errorf("%s", <-c)
+	}()
+
+	go func() {
+		select {
+		case err := <-signalChannel:
+			r.context.logger.Info.Println("Received shutdown", err)
+			r.Shutdown(beforeShutdown...)
+		}
+	}()
+}
+
+func (r *DockerEnvironment) Shutdown(beforeShutdown ...func()) {
+	r.shutdownOnce.Do(func() {
+		if len(beforeShutdown) > 0 {
+			r.context.logger.Info.Println("Invoke before shutdown")
+			for _, f := range beforeShutdown {
+				f()
+			}
+		}
+		for _, container := range r.context.containers {
+			err := r.Destroy(container.Name)
+			if err != nil {
+				r.context.logger.Error.Println("Destroy component error", err)
+			}
+		}
+	})
 }

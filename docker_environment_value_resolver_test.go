@@ -9,9 +9,9 @@ import (
 func TestNewDockerComponentValueResolver(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
-	resolver := NewDockerComponentValueResolver("127.0.0.2", environmentContext)
+	resolver := newDockerComponentValueResolver("127.0.0.2", environmentContext)
 
 	a.Equal(environmentContext, resolver.context)
 	a.Equal("127.0.0.2", resolver.ip)
@@ -20,10 +20,10 @@ func TestNewDockerComponentValueResolver(t *testing.T) {
 func TestEnvironmentContextVariablesNoContainers(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
-	resolver := &DockerEnvironmentValueResolver{context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{context: environmentContext}
 	resolveContext, err := resolver.getEnvironmentContextVariables()
 	a.Nil(err)
 	a.Empty(resolveContext)
@@ -32,14 +32,14 @@ func TestEnvironmentContextVariablesNoContainers(t *testing.T) {
 func TestEnvironmentContextVariablesNoBinding(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "REDIS", Image: "redis:latest"})
 	a.Nil(err)
 	container.portBindings = make([]Port, 0)
 
-	resolver := &DockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
 	resolveContext, err := resolver.getEnvironmentContextVariables()
 	a.Nil(err)
 	a.Equal(resolveContext, map[string]interface{}{
@@ -50,7 +50,7 @@ func TestEnvironmentContextVariablesNoBinding(t *testing.T) {
 func TestEnvironmentContextVariablesNoBindings(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container1, err := environmentContext.addContainer(DockerComponent{Name: "REDIS", Image: "redis:latest"})
@@ -60,7 +60,7 @@ func TestEnvironmentContextVariablesNoBindings(t *testing.T) {
 	a.Nil(err)
 	container2.portBindings = make([]Port, 0)
 
-	resolver := &DockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
 	resolveContext, err := resolver.getEnvironmentContextVariables()
 	a.Nil(err)
 	a.Equal(resolveContext, map[string]interface{}{
@@ -71,7 +71,7 @@ func TestEnvironmentContextVariablesNoBindings(t *testing.T) {
 func TestEnvironmentContextVariablesPortBindingsWithDefaultName(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "REDIS", Image: "redis:latest"})
@@ -82,7 +82,7 @@ func TestEnvironmentContextVariablesPortBindingsWithDefaultName(t *testing.T) {
 	container.DockerComponent.ExposedPorts = []Port{
 		{ContainerPort: 8080, HostPort: 8081},
 	}
-	resolver := &DockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
 	resolveContext, err := resolver.getEnvironmentContextVariables()
 	a.Nil(err)
 	a.Equal(resolveContext, map[string]interface{}{
@@ -103,7 +103,7 @@ func TestEnvironmentContextVariablesPortBindingsWithDefaultName(t *testing.T) {
 func TestEnvironmentContextVariablesPortBindingsWithNamedPort(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "REDIS", Image: "redis:latest"})
@@ -115,7 +115,7 @@ func TestEnvironmentContextVariablesPortBindingsWithNamedPort(t *testing.T) {
 		{Name: "MY-PORT", ContainerPort: 8080, HostPort: 8081},
 	}
 
-	resolver := &DockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
 	resolveContext, err := resolver.getEnvironmentContextVariables()
 	a.Nil(err)
 	a.Equal(resolveContext, map[string]interface{}{
@@ -146,7 +146,7 @@ func TestEnvironmentContextVariablesPortBindingsWithNamedPort(t *testing.T) {
 func TestResolveUsingContextVariables(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
@@ -161,7 +161,7 @@ func TestResolveUsingContextVariables(t *testing.T) {
 		{Name: "sentinel", ContainerPort: 26379, HostPort: 32402},
 	}
 
-	resolver := &DockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
 
 	value, err := resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.Port"}}`)
 	a.Nil(err)
@@ -183,7 +183,7 @@ func TestResolveUsingContextVariables(t *testing.T) {
 func TestResolveUsingSystemVariables(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
@@ -197,7 +197,7 @@ func TestResolveUsingSystemVariables(t *testing.T) {
 	}
 	os.Setenv("my-os-env-variable", "4711")
 
-	resolver := &DockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
 
 	value, err := resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.Port"}}`)
 	a.Nil(err)
@@ -216,7 +216,7 @@ func TestResolveUsingSystemVariables(t *testing.T) {
 func TestResolveContextVariableOutweighsSystemVariable(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
@@ -228,7 +228,7 @@ func TestResolveContextVariableOutweighsSystemVariable(t *testing.T) {
 	os.Setenv("redis.HostPort", "32402")
 	os.Setenv("redis.HostPort2", "32403")
 
-	resolver := &DockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
 
 	value, err := resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostPort"}}`)
 	a.Nil(err)
@@ -242,7 +242,7 @@ func TestResolveContextVariableOutweighsSystemVariable(t *testing.T) {
 func TestResolveReturnsErrorWhenVariableIsNotFound(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
@@ -252,7 +252,7 @@ func TestResolveReturnsErrorWhenVariableIsNotFound(t *testing.T) {
 		{ContainerPort: 6379, HostPort: 32401},
 	}
 
-	resolver := &DockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
 
 	_, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostBad"}}`)
 	a.True(err != nil)
@@ -262,7 +262,7 @@ func TestResolveReturnsErrorWhenVariableIsNotFound(t *testing.T) {
 func TestConfigureContainersEnv(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container1, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
@@ -285,7 +285,7 @@ func TestConfigureContainersEnv(t *testing.T) {
 		"REDIS_TARGET": `redis-other://{{ value . "redis.Host"}}:{{ value . "redis.HostPort"}}`,
 	}
 
-	resolver := &DockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
 	err = resolver.configureContainersEnv()
 	a.Nil(err)
 
@@ -300,13 +300,13 @@ func TestConfigureContainersEnv(t *testing.T) {
 func TestRequireContainerPortBindings(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	_, err = environmentContext.addContainer(DockerComponent{Name: "REDIS", Image: "redis:latest"})
 	a.Nil(err)
 
-	resolver := &DockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
+	resolver := &dockerEnvironmentValueResolver{ip: "127.0.0.1", context: environmentContext}
 	_, err = resolver.getEnvironmentContextVariables()
 	a.True(err != nil)
 	a.Equal(`portBindings for 'redis' is not defined`, err.Error())

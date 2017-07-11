@@ -5,19 +5,19 @@ import (
 	"net"
 )
 
-type DockerEnvironmentPortBinding struct {
+type dockerEnvironmentPortBinding struct {
 	bindIP  string
-	context *DockerEnvironmentContext
+	context *dockerEnvironmentContext
 }
 
-func NewDockerEnvironmentPortBinding(bindIP string, context *DockerEnvironmentContext) *DockerEnvironmentPortBinding {
-	return &DockerEnvironmentPortBinding{
+func newDockerEnvironmentPortBinding(bindIP string, context *dockerEnvironmentContext) *dockerEnvironmentPortBinding {
+	return &dockerEnvironmentPortBinding{
 		bindIP:  bindIP,
 		context: context,
 	}
 }
 
-func (r *DockerEnvironmentPortBinding) configurePortBindings() error {
+func (r *dockerEnvironmentPortBinding) configurePortBindings() error {
 	componentPorts, err := r.getNormalizedExposedPorts()
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (r *DockerEnvironmentPortBinding) configurePortBindings() error {
 	return nil
 }
 
-func (r *DockerEnvironmentPortBinding) getNormalizedExposedPorts() (map[string][]Port, error) {
+func (r *dockerEnvironmentPortBinding) getNormalizedExposedPorts() (map[string][]Port, error) {
 	componentPorts := make(map[string][]Port)
 
 	for containerName, container := range r.context.containers {

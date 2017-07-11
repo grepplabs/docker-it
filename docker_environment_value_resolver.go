@@ -17,19 +17,19 @@ const (
 	qualifierPort          = "Port"          // mapped port on host
 )
 
-type DockerEnvironmentValueResolver struct {
+type dockerEnvironmentValueResolver struct {
 	ip      string
-	context *DockerEnvironmentContext
+	context *dockerEnvironmentContext
 }
 
-func NewDockerComponentValueResolver(ip string, context *DockerEnvironmentContext) *DockerEnvironmentValueResolver {
-	return &DockerEnvironmentValueResolver{
+func newDockerComponentValueResolver(ip string, context *dockerEnvironmentContext) *dockerEnvironmentValueResolver {
+	return &dockerEnvironmentValueResolver{
 		ip:      ip,
 		context: context,
 	}
 }
 
-func (r *DockerEnvironmentValueResolver) value(m map[string]interface{}, key string) (interface{}, error) {
+func (r *dockerEnvironmentValueResolver) value(m map[string]interface{}, key string) (interface{}, error) {
 	if val, ok := m[key]; !ok {
 		return nil, fmt.Errorf("Unknown key '%s'", key)
 	} else {
@@ -37,7 +37,7 @@ func (r *DockerEnvironmentValueResolver) value(m map[string]interface{}, key str
 	}
 }
 
-func (r *DockerEnvironmentValueResolver) configureContainersEnv() error {
+func (r *dockerEnvironmentValueResolver) configureContainersEnv() error {
 
 	contextVariables, err := r.getEnvironmentContextVariables()
 	if err != nil {
@@ -61,7 +61,7 @@ func (r *DockerEnvironmentValueResolver) configureContainersEnv() error {
 	return nil
 }
 
-func (r *DockerEnvironmentValueResolver) resolve(templateText string) (string, error) {
+func (r *dockerEnvironmentValueResolver) resolve(templateText string) (string, error) {
 
 	contextVariables := r.getSystemContextVariables()
 
@@ -77,7 +77,7 @@ func (r *DockerEnvironmentValueResolver) resolve(templateText string) (string, e
 	return r.resolveValue("resolve", templateText, contextVariables)
 }
 
-func (r *DockerEnvironmentValueResolver) resolveValue(templateName string, templateText string, contextVariables map[string]interface{}) (string, error) {
+func (r *dockerEnvironmentValueResolver) resolveValue(templateName string, templateText string, contextVariables map[string]interface{}) (string, error) {
 
 	var funcMap = template.FuncMap{
 		"value": r.value,
@@ -96,7 +96,7 @@ func (r *DockerEnvironmentValueResolver) resolveValue(templateName string, templ
 	return b.String(), nil
 }
 
-func (r *DockerEnvironmentValueResolver) getEnvironmentContextVariables() (map[string]interface{}, error) {
+func (r *dockerEnvironmentValueResolver) getEnvironmentContextVariables() (map[string]interface{}, error) {
 
 	result := make(map[string]interface{})
 	for containerName, container := range r.context.containers {
@@ -109,7 +109,7 @@ func (r *DockerEnvironmentValueResolver) getEnvironmentContextVariables() (map[s
 	return result, nil
 }
 
-func (r *DockerEnvironmentValueResolver) appendContainerContextVariables(name string, ip string, result map[string]interface{}, container *DockerContainer) {
+func (r *dockerEnvironmentValueResolver) appendContainerContextVariables(name string, ip string, result map[string]interface{}, container *dockerContainer) {
 	result[fmt.Sprintf("%s.%s", name, qualifierHost)] = ip
 
 	for _, port := range container.portBindings {
@@ -144,7 +144,7 @@ func (r *DockerEnvironmentValueResolver) appendContainerContextVariables(name st
 	}
 }
 
-func (r *DockerEnvironmentValueResolver) getSystemContextVariables() map[string]interface{} {
+func (r *dockerEnvironmentValueResolver) getSystemContextVariables() map[string]interface{} {
 	result := make(map[string]interface{})
 	for _, e := range os.Environ() {
 		pair := strings.Split(e, "=")

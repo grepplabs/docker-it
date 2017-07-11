@@ -8,14 +8,14 @@ import (
 	"strings"
 )
 
-type DockerEnvironmentContext struct {
+type dockerEnvironmentContext struct {
 	ID         string
 	logger     *logger
 	externalIP string
-	containers map[string]*DockerContainer
+	containers map[string]*dockerContainer
 }
 
-func NewDockerEnvironmentContext() (*DockerEnvironmentContext, error) {
+func newDockerEnvironmentContext() (*dockerEnvironmentContext, error) {
 	externalIP, err := externalIP()
 	if err != nil {
 		return nil, err
@@ -23,19 +23,19 @@ func NewDockerEnvironmentContext() (*DockerEnvironmentContext, error) {
 	logger := newLogger()
 	logger.Info.Println("Using IP", externalIP)
 	id := uuid.New().String()
-	return &DockerEnvironmentContext{ID: id, logger: logger, externalIP: externalIP, containers: make(map[string]*DockerContainer)}, nil
+	return &dockerEnvironmentContext{ID: id, logger: logger, externalIP: externalIP, containers: make(map[string]*dockerContainer)}, nil
 }
 
 func normalizeName(name string) string {
 	return strings.ToLower(name)
 }
 
-func (r *DockerEnvironmentContext) addContainer(component DockerComponent) (*DockerContainer, error) {
+func (r *dockerEnvironmentContext) addContainer(component DockerComponent) (*dockerContainer, error) {
 	if component.Name == "" || component.Image == "" {
 		return nil, errors.New("DockerComponent Name and Image must not be empty")
 	}
 	name := normalizeName(component.Name)
-	container := NewDockerContainer(component)
+	container := newDockerContainer(component)
 	if _, exits := r.containers[name]; exits {
 		return nil, fmt.Errorf("DockerComponent [%s] is configured twice", name)
 	}
@@ -43,7 +43,7 @@ func (r *DockerEnvironmentContext) addContainer(component DockerComponent) (*Doc
 	return container, nil
 }
 
-func (r *DockerEnvironmentContext) getContainer(name string) (*DockerContainer, error) {
+func (r *dockerEnvironmentContext) getContainer(name string) (*dockerContainer, error) {
 	if container, exits := r.containers[normalizeName(name)]; !exits {
 		return nil, fmt.Errorf("DockerComponent [%s] is not configured", name)
 	} else {

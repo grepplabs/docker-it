@@ -2,33 +2,33 @@ package dockerit
 
 import (
 	"context"
-	dockerTypes "github.com/docker/docker/api/types"
-	dockerContainer "github.com/docker/docker/api/types/container"
-	dockerFilters "github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types"
+	typesContainer "github.com/docker/docker/api/types/container"
+	typesFilters "github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"io"
 	"io/ioutil"
 )
 
-type DockerClient struct {
+type dockerClient struct {
 	client *client.Client
 }
 
-func NewDockerClient() (*DockerClient, error) {
+func NewDockerClient() (*dockerClient, error) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		return nil, err
 	}
-	return &DockerClient{client: cli}, nil
+	return &dockerClient{client: cli}, nil
 }
 
-func (r *DockerClient) Close() error {
+func (r *dockerClient) Close() error {
 	return r.client.Close()
 }
 
-func (r *DockerClient) GetContainerByID(containerID string) (*dockerTypes.Container, error) {
-	options := dockerTypes.ContainerListOptions{All: true}
+func (r *dockerClient) GetContainerByID(containerID string) (*types.Container, error) {
+	options := types.ContainerListOptions{All: true}
 	if containers, err := r.client.ContainerList(context.Background(), options); err != nil {
 		return nil, err
 	} else {
@@ -41,11 +41,11 @@ func (r *DockerClient) GetContainerByID(containerID string) (*dockerTypes.Contai
 	return nil, nil
 }
 
-func (r *DockerClient) GetImageByName(imageName string) (*dockerTypes.ImageSummary, error) {
+func (r *dockerClient) GetImageByName(imageName string) (*types.ImageSummary, error) {
 	// https://docs.docker.com/engine/api/v1.29/#operation/ImageList
-	imageFilters := dockerFilters.NewArgs()
+	imageFilters := typesFilters.NewArgs()
 	imageFilters.Add("reference", imageName)
-	options := dockerTypes.ImageListOptions{Filters: imageFilters}
+	options := types.ImageListOptions{Filters: imageFilters}
 	if summaries, err := r.client.ImageList(context.Background(), options); err != nil {
 		return nil, err
 	} else {
@@ -56,7 +56,7 @@ func (r *DockerClient) GetImageByName(imageName string) (*dockerTypes.ImageSumma
 	return nil, nil
 }
 
-func (r *DockerClient) RemoveImageByName(imageName string) error {
+func (r *dockerClient) RemoveImageByName(imageName string) error {
 	if summary, err := r.GetImageByName(imageName); err != nil {
 		return err
 	} else if summary != nil {
@@ -65,15 +65,15 @@ func (r *DockerClient) RemoveImageByName(imageName string) error {
 	return nil
 }
 
-func (r *DockerClient) RemoveImage(imageID string) error {
-	options := dockerTypes.ImageRemoveOptions{}
+func (r *dockerClient) RemoveImage(imageID string) error {
+	options := types.ImageRemoveOptions{}
 	_, err := r.client.ImageRemove(context.Background(), imageID, options)
 	return err
 
 }
 
-func (r *DockerClient) PullImage(imageName string) error {
-	options := dockerTypes.ImagePullOptions{}
+func (r *dockerClient) PullImage(imageName string) error {
+	options := types.ImagePullOptions{}
 	resp, err := r.client.ImagePull(context.Background(), imageName, options)
 	if err != nil {
 		return err
@@ -85,18 +85,18 @@ func (r *DockerClient) PullImage(imageName string) error {
 	return nil
 }
 
-func (r *DockerClient) CreateContainer(containerName string, image string, env []string, portSpecs []string) (string, error) {
+func (r *dockerClient) CreateContainer(containerName string, image string, env []string, portSpecs []string) (string, error) {
 	// ip:public:private/proto
 	exposedPorts, portBindings, err := nat.ParsePortSpecs(portSpecs)
 	if err != nil {
 		return "", err
 	}
-	config := dockerContainer.Config{
+	config := typesContainer.Config{
 		Image:        image,
 		Env:          env,
 		ExposedPorts: exposedPorts,
 	}
-	hostConfig := dockerContainer.HostConfig{
+	hostConfig := typesContainer.HostConfig{
 		PortBindings: portBindings,
 	}
 
@@ -108,21 +108,21 @@ func (r *DockerClient) CreateContainer(containerName string, image string, env [
 	}
 }
 
-func (r *DockerClient) StartContainer(containerID string) error {
-	options := dockerTypes.ContainerStartOptions{}
+func (r *dockerClient) StartContainer(containerID string) error {
+	options := types.ContainerStartOptions{}
 	return r.client.ContainerStart(context.Background(), containerID, options)
 }
 
-func (r *DockerClient) ContainerLogs(containerID string, follow bool) (io.ReadCloser, error) {
-	options := dockerTypes.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: follow}
+func (r *dockerClient) ContainerLogs(containerID string, follow bool) (io.ReadCloser, error) {
+	options := types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: follow}
 	return r.client.ContainerLogs(context.Background(), containerID, options)
 }
 
-func (r *DockerClient) StopContainer(containerID string) error {
+func (r *dockerClient) StopContainer(containerID string) error {
 	return r.client.ContainerStop(context.Background(), containerID, nil)
 }
 
-func (r *DockerClient) RemoveContainer(containerID string) error {
-	options := dockerTypes.ContainerRemoveOptions{RemoveVolumes: true, Force: true}
+func (r *dockerClient) RemoveContainer(containerID string) error {
+	options := types.ContainerRemoveOptions{RemoveVolumes: true, Force: true}
 	return r.client.ContainerRemove(context.Background(), containerID, options)
 }

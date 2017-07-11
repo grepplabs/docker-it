@@ -1,6 +1,6 @@
 package dockerit
 
-type DockerContainer struct {
+type dockerContainer struct {
 	DockerComponent
 
 	containerID  string
@@ -10,11 +10,11 @@ type DockerContainer struct {
 	stopFollowLogsChannel chan struct{}
 }
 
-func NewDockerContainer(component DockerComponent) *DockerContainer {
-	return &DockerContainer{DockerComponent: component, stopFollowLogsChannel: make(chan struct{}, 1)}
+func newDockerContainer(component DockerComponent) *dockerContainer {
+	return &dockerContainer{DockerComponent: component, stopFollowLogsChannel: make(chan struct{}, 1)}
 }
 
-func (r *DockerContainer) StopFollowLogs() {
+func (r *dockerContainer) StopFollowLogs() {
 	select {
 	case r.stopFollowLogsChannel <- struct{}{}:
 	default:

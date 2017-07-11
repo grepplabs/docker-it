@@ -5,18 +5,18 @@ import (
 	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
-	dockerClient "github.com/docker/docker/client"
+	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"io"
 	"io/ioutil"
 )
 
 type DockerClient struct {
-	client *dockerClient.Client
+	client *client.Client
 }
 
 func NewDockerClient() (*DockerClient, error) {
-	cli, err := dockerClient.NewEnvClient()
+	cli, err := client.NewEnvClient()
 	if err != nil {
 		return nil, err
 	}

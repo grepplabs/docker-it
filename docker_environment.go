@@ -53,10 +53,6 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 	return &DockerEnvironment{context: context, lifecycleHandler: lifecycleHandler, valueResolver: valueResolver}, nil
 }
 
-type dockerContainerCommand interface {
-	exec(*DockerContainer) error
-}
-
 func (r *DockerEnvironment) Start(names ...string) error {
 	return r.forEach(r.lifecycleHandler.Start, names...)
 }

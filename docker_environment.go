@@ -46,11 +46,11 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 	}
 
 	// new lifecycle handler
-	lifecycleHandler, err := newDockerLifecycleHandler(context)
+	lifecycleHandler, err := newDockerLifecycleHandler(context, valueResolver)
 	if err != nil {
 		return nil, err
 	}
-	return &DockerEnvironment{context: context, lifecycleHandler: lifecycleHandler, valueResolver: valueResolver}, nil
+	return &DockerEnvironment{context: context, lifecycleHandler: lifecycleHandler}, nil
 }
 
 func (r *DockerEnvironment) Start(names ...string) error {
@@ -121,7 +121,7 @@ func (r *DockerEnvironment) Close() {
 }
 
 func (r *DockerEnvironment) Resolve(template string) (string, error) {
-	return r.valueResolver.resolve(template)
+	return r.lifecycleHandler.valueResolver.Resolve(template)
 }
 
 func (r *DockerEnvironment) WithShutdown(beforeShutdown ...func()) chan struct{} {

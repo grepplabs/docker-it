@@ -9,16 +9,17 @@ import (
 )
 
 type dockerLifecycleHandler struct {
-	dockerClient *dockerClient
-	context      *dockerEnvironmentContext
+	dockerClient  *dockerClient
+	context       *dockerEnvironmentContext
+	valueResolver ValueResolver
 }
 
-func newDockerLifecycleHandler(context *dockerEnvironmentContext) (*dockerLifecycleHandler, error) {
+func newDockerLifecycleHandler(context *dockerEnvironmentContext, valueResolver ValueResolver) (*dockerLifecycleHandler, error) {
 	dockerClient, err := NewDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	return &dockerLifecycleHandler{dockerClient: dockerClient, context: context}, nil
+	return &dockerLifecycleHandler{dockerClient: dockerClient, context: context, valueResolver: valueResolver}, nil
 }
 
 func (r *dockerLifecycleHandler) Close() {
@@ -66,7 +67,7 @@ func (r *dockerLifecycleHandler) Start(container *dockerContainer) error {
 	}
 
 	if container.BeforeStart != nil {
-		if err := container.BeforeStart.Call(); err != nil {
+		if err := container.BeforeStart.Call(r.valueResolver); err != nil {
 			return err
 		}
 	}
@@ -84,7 +85,7 @@ func (r *dockerLifecycleHandler) Start(container *dockerContainer) error {
 		}
 	}
 	if container.AfterStart != nil {
-		if err := container.AfterStart.Call(); err != nil {
+		if err := container.AfterStart.Call(r.valueResolver); err != nil {
 			return err
 
 		}

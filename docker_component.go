@@ -13,7 +13,11 @@ type DockerComponent struct {
 }
 
 type Callback interface {
-	Call() error
+	Call(resolver ValueResolver) error
+}
+
+type ValueResolver interface {
+	Resolve(template string) (string, error)
 }
 
 type Port struct {

@@ -61,7 +61,8 @@ func (r *dockerEnvironmentValueResolver) configureContainersEnv() error {
 	return nil
 }
 
-func (r *dockerEnvironmentValueResolver) resolve(templateText string) (string, error) {
+// implements ValueResolver
+func (r *dockerEnvironmentValueResolver) Resolve(templateText string) (string, error) {
 
 	contextVariables := r.getSystemContextVariables()
 

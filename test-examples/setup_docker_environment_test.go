@@ -30,10 +30,24 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					ContainerPort: 6379,
 				},
 			},
+			AfterStart: &Wait{`{{ value . "it-redis.Port"}}`},
 		},
 	)
 	if err != nil {
 		panic(err)
 	}
 	return env
+}
+
+type Wait struct {
+	template string
+}
+
+func (r *Wait) Call(resolver dit.ValueResolver) error {
+	if _, err := resolver.Resolve(r.template); err != nil {
+		return err
+	} else {
+		return nil
+	}
+
 }

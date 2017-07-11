@@ -9,10 +9,10 @@ import (
 func TestGetNormalizedExposedPortsWhenNoPortsAreExposed(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
-	binder := NewDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
+	binder := newDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
 
 	_, err = environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
 	a.Nil(err)
@@ -25,10 +25,10 @@ func TestGetNormalizedExposedPortsWhenNoPortsAreExposed(t *testing.T) {
 func TestExposedPortContainerPortMustBeProvided(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
-	binder := NewDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
+	binder := newDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
 	a.Nil(err)
@@ -46,10 +46,10 @@ func TestExposedPortContainerPortMustBeProvided(t *testing.T) {
 func TestGetNormalizedExposedPorts(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
-	binder := NewDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
+	binder := newDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "myapp", Image: "myapp:latest"})
 	a.Nil(err)
@@ -103,10 +103,10 @@ func TestGetNormalizedExposedPorts(t *testing.T) {
 func TestGetNormalizedExposedPortsFailsWhenPortNameUsedTwice(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
-	binder := NewDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
+	binder := newDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
 
 	container, err := environmentContext.addContainer(DockerComponent{Name: "myapp", Image: "myapp:latest"})
 	a.Nil(err)
@@ -201,7 +201,7 @@ func TestPortBindingsFailsWhenHostPortConfiguredTwice(t *testing.T) {
 func TestConfigurePortBinding(t *testing.T) {
 	a := assert.New(t)
 
-	environmentContext, err := NewDockerEnvironmentContext()
+	environmentContext, err := newDockerEnvironmentContext()
 	a.Nil(err)
 
 	container1, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
@@ -216,7 +216,7 @@ func TestConfigurePortBinding(t *testing.T) {
 		{ContainerPort: 9094},
 	}
 
-	binder := NewDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
+	binder := newDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
 	err = binder.configurePortBindings()
 
 	binding1 := container1.portBindings

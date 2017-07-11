@@ -10,9 +10,9 @@ import (
 )
 
 type DockerEnvironment struct {
-	context          *DockerEnvironmentContext
-	lifecycleHandler *DockerLifecycleHandler
-	valueResolver    *DockerEnvironmentValueResolver
+	context          *dockerEnvironmentContext
+	lifecycleHandler *dockerLifecycleHandler
+	valueResolver    *dockerEnvironmentValueResolver
 
 	shutdownOnce sync.Once
 }
@@ -22,7 +22,7 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 		return nil, errors.New("Component list is empty")
 	}
 	// new context
-	context, err := NewDockerEnvironmentContext()
+	context, err := newDockerEnvironmentContext()
 	if err != nil {
 		return nil, err
 	}
@@ -35,26 +35,22 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 		return nil, err
 	}
 	// we could use 0.0.0.0
-	portBinding := NewDockerEnvironmentPortBinding(context.externalIP, context)
+	portBinding := newDockerEnvironmentPortBinding(context.externalIP, context)
 	if err := portBinding.configurePortBindings(); err != nil {
 		return nil, err
 	}
 
-	valueResolver := NewDockerComponentValueResolver(context.externalIP, context)
+	valueResolver := newDockerComponentValueResolver(context.externalIP, context)
 	if err := valueResolver.configureContainersEnv(); err != nil {
 		return nil, err
 	}
 
 	// new lifecycle handler
-	lifecycleHandler, err := NewDockerLifecycleHandler(context)
+	lifecycleHandler, err := newDockerLifecycleHandler(context)
 	if err != nil {
 		return nil, err
 	}
 	return &DockerEnvironment{context: context, lifecycleHandler: lifecycleHandler, valueResolver: valueResolver}, nil
-}
-
-type dockerContainerCommand interface {
-	exec(*DockerContainer) error
 }
 
 func (r *DockerEnvironment) Start(names ...string) error {
@@ -107,7 +103,7 @@ func (r *DockerEnvironment) Destroy(names ...string) error {
 	return r.forEach(r.lifecycleHandler.Destroy, names...)
 }
 
-func (r *DockerEnvironment) forEach(f func(*DockerContainer) error, names ...string) error {
+func (r *DockerEnvironment) forEach(f func(*dockerContainer) error, names ...string) error {
 	for _, name := range names {
 		if container, err := r.context.getContainer(name); err != nil {
 			return err

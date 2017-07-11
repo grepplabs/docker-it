@@ -8,20 +8,20 @@ import (
 	"strings"
 )
 
-type DockerLifecycleHandler struct {
-	dockerClient *DockerClient
-	context      *DockerEnvironmentContext
+type dockerLifecycleHandler struct {
+	dockerClient *dockerClient
+	context      *dockerEnvironmentContext
 }
 
-func NewDockerLifecycleHandler(context *DockerEnvironmentContext) (*DockerLifecycleHandler, error) {
+func newDockerLifecycleHandler(context *dockerEnvironmentContext) (*dockerLifecycleHandler, error) {
 	dockerClient, err := NewDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	return &DockerLifecycleHandler{dockerClient: dockerClient, context: context}, nil
+	return &dockerLifecycleHandler{dockerClient: dockerClient, context: context}, nil
 }
 
-func (r *DockerLifecycleHandler) Close() {
+func (r *dockerLifecycleHandler) Close() {
 	r.context.logger.Info.Println("Closing docker lifecycle handler")
 
 	for _, container := range r.context.containers {
@@ -30,7 +30,7 @@ func (r *DockerLifecycleHandler) Close() {
 	r.dockerClient.Close()
 }
 
-func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
+func (r *dockerLifecycleHandler) Create(container *dockerContainer) error {
 	if exists, err := r.containerExists(container.containerID); err != nil {
 		return err
 	} else if exists {
@@ -50,7 +50,7 @@ func (r *DockerLifecycleHandler) Create(container *DockerContainer) error {
 	return nil
 }
 
-func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
+func (r *dockerLifecycleHandler) Start(container *dockerContainer) error {
 	r.context.logger.Info.Println("Start component", container.Name)
 
 	if container.containerID == "" {
@@ -92,7 +92,7 @@ func (r *DockerLifecycleHandler) Start(container *DockerContainer) error {
 	return nil
 }
 
-func (r *DockerLifecycleHandler) Stop(container *DockerContainer) error {
+func (r *dockerLifecycleHandler) Stop(container *dockerContainer) error {
 	r.context.logger.Info.Println("Stop component", container.Name)
 
 	if container.containerID == "" {
@@ -106,7 +106,7 @@ func (r *DockerLifecycleHandler) Stop(container *DockerContainer) error {
 	return nil
 }
 
-func (r *DockerLifecycleHandler) Destroy(container *DockerContainer) error {
+func (r *dockerLifecycleHandler) Destroy(container *dockerContainer) error {
 	r.context.logger.Info.Println("Destroy component", container.Name)
 
 	container.StopFollowLogs()
@@ -141,7 +141,7 @@ func (r *DockerLifecycleHandler) Destroy(container *DockerContainer) error {
 	return nil
 }
 
-func (r *DockerLifecycleHandler) isContainerRunning(containerID string) (bool, error) {
+func (r *dockerLifecycleHandler) isContainerRunning(containerID string) (bool, error) {
 	if containerID == "" {
 		return false, errors.New("isContainerRunning: containerID must not be empty")
 	}
@@ -156,7 +156,7 @@ func (r *DockerLifecycleHandler) isContainerRunning(containerID string) (bool, e
 	}
 }
 
-func (r *DockerLifecycleHandler) containerExists(containerID string) (bool, error) {
+func (r *dockerLifecycleHandler) containerExists(containerID string) (bool, error) {
 	if containerID != "" {
 		if container, err := r.dockerClient.GetContainerByID(containerID); err != nil {
 			return false, err
@@ -169,7 +169,7 @@ func (r *DockerLifecycleHandler) containerExists(containerID string) (bool, erro
 	return false, nil
 }
 
-func (r *DockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocalOnly bool) error {
+func (r *dockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocalOnly bool) error {
 	var imageExists bool
 	if summary, err := r.dockerClient.GetImageByName(image); err != nil {
 		return err
@@ -196,7 +196,7 @@ func (r *DockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocal
 	return nil
 }
 
-func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContainer) error {
+func (r *dockerLifecycleHandler) createDockerContainer(container *dockerContainer) error {
 	containerName := r.getContainerName(container.Name)
 
 	portSpecs := make([]string, 0)
@@ -222,7 +222,7 @@ func (r *DockerLifecycleHandler) createDockerContainer(container *DockerContaine
 	}
 }
 
-func (r *DockerLifecycleHandler) getContainerName(name string) string {
+func (r *dockerLifecycleHandler) getContainerName(name string) string {
 	var containerName string
 	if r.context.ID != "" {
 		containerName += name + "-" + r.context.ID
@@ -232,7 +232,7 @@ func (r *DockerLifecycleHandler) getContainerName(name string) string {
 	return normalizeName(containerName)
 }
 
-func (r *DockerLifecycleHandler) getNetworkName() string {
+func (r *dockerLifecycleHandler) getNetworkName() string {
 	networkName := "docker-environment"
 	if r.context.ID != "" {
 		networkName += "-" + r.context.ID
@@ -240,7 +240,7 @@ func (r *DockerLifecycleHandler) getNetworkName() string {
 	return networkName
 }
 
-func (r *DockerLifecycleHandler) fetchLogs(containerID string, dstout, dsterr io.Writer) error {
+func (r *dockerLifecycleHandler) fetchLogs(containerID string, dstout, dsterr io.Writer) error {
 	reader, err := r.dockerClient.ContainerLogs(containerID, false)
 	if err != nil {
 		return err
@@ -249,7 +249,7 @@ func (r *DockerLifecycleHandler) fetchLogs(containerID string, dstout, dsterr io
 	return err
 }
 
-func (r *DockerLifecycleHandler) followLogs(container *DockerContainer, dstout, dsterr io.Writer) error {
+func (r *dockerLifecycleHandler) followLogs(container *dockerContainer, dstout, dsterr io.Writer) error {
 	followClient, err := NewDockerClient()
 	if err != nil {
 		return err

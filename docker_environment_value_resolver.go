@@ -2,6 +2,7 @@ package dockerit
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -61,8 +62,7 @@ func (r *dockerEnvironmentValueResolver) configureContainersEnv() error {
 	return nil
 }
 
-// implements ValueResolver
-func (r *dockerEnvironmentValueResolver) Resolve(templateText string) (string, error) {
+func (r *dockerEnvironmentValueResolver) resolve(templateText string) (string, error) {
 
 	contextVariables := r.getSystemContextVariables()
 
@@ -152,4 +152,18 @@ func (r *dockerEnvironmentValueResolver) getSystemContextVariables() map[string]
 		result[pair[0]] = pair[1]
 	}
 	return result
+}
+
+func (r *dockerEnvironmentValueResolver) Port(componentName string, portName string) (string, error) {
+	if componentName == "" {
+		return "", errors.New("Port value resolver: component name is empty")
+	}
+
+	var tpl string
+	if portName == "" {
+		tpl = fmt.Sprintf(`{{ value . "%s.%s"}}`, normalizeName(componentName), qualifierPort)
+	} else {
+		tpl = fmt.Sprintf(`{{ value . "%s.%s.%s"}}`, normalizeName(componentName), normalizeName(portName), qualifierPort)
+	}
+	return r.resolve(tpl)
 }

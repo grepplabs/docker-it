@@ -163,19 +163,19 @@ func TestResolveUsingContextVariables(t *testing.T) {
 
 	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
 
-	value, err := resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.Port"}}`)
+	value, err := resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.Port"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:32401`, value)
 
-	value, err = resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.ContainerPort"}}`)
+	value, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.ContainerPort"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:6379`, value)
 
-	value, err = resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.sentinel.Port"}}`)
+	value, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.sentinel.Port"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:32402`, value)
 
-	value, err = resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.sentinel.ContainerPort"}}`)
+	value, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.sentinel.ContainerPort"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:26379`, value)
 }
@@ -199,15 +199,15 @@ func TestResolveUsingSystemVariables(t *testing.T) {
 
 	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
 
-	value, err := resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.Port"}}`)
+	value, err := resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.Port"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:32401`, value)
 
-	value, err = resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.ContainerPort"}}`)
+	value, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.ContainerPort"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:6379`, value)
 
-	value, err = resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "my-os-env-variable"}}`)
+	value, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "my-os-env-variable"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:4711`, value)
 
@@ -230,11 +230,11 @@ func TestResolveContextVariableOutweighsSystemVariable(t *testing.T) {
 
 	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
 
-	value, err := resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostPort"}}`)
+	value, err := resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostPort"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:32401`, value)
 
-	value, err = resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostPort2"}}`)
+	value, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostPort2"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:32403`, value)
 }
@@ -254,7 +254,7 @@ func TestResolveReturnsErrorWhenVariableIsNotFound(t *testing.T) {
 
 	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
 
-	_, err = resolver.Resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostBad"}}`)
+	_, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostBad"}}`)
 	a.True(err != nil)
 	a.Contains(err.Error(), "Unknown key 'redis.HostBad'")
 }

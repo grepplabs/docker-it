@@ -35,18 +35,16 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 		return nil, err
 	}
 	// we could use 0.0.0.0
-	portBinding := newDockerEnvironmentPortBinding(context.externalIP, context)
-	if err := portBinding.configurePortBindings(); err != nil {
+	if err := context.configurePortBindings(); err != nil {
 		return nil, err
 	}
 
-	valueResolver := newDockerComponentValueResolver(context.externalIP, context)
-	if err := valueResolver.configureContainersEnv(); err != nil {
+	if err := context.configureContainersEnv(); err != nil {
 		return nil, err
 	}
 
 	// new lifecycle handler
-	lifecycleHandler, err := newDockerLifecycleHandler(context, valueResolver)
+	lifecycleHandler, err := newDockerLifecycleHandler(context)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +119,13 @@ func (r *DockerEnvironment) Close() {
 }
 
 func (r *DockerEnvironment) Resolve(template string) (string, error) {
-	return r.lifecycleHandler.valueResolver.Resolve(template)
+	return r.context.Resolve(template)
+}
+func (r *DockerEnvironment) Host() string {
+	return r.context.Host()
+}
+func (r *DockerEnvironment) Port(componentName string, portName string) (string, error) {
+	return r.context.Port(componentName, portName)
 }
 
 func (r *DockerEnvironment) WithShutdown(beforeShutdown ...func()) chan struct{} {

@@ -23,11 +23,26 @@ func newDockerEnvironmentContext() (*dockerEnvironmentContext, error) {
 	logger := newLogger()
 	logger.Info.Println("Using IP", externalIP)
 	id := uuid.New().String()
+
 	return &dockerEnvironmentContext{ID: id, logger: logger, externalIP: externalIP, containers: make(map[string]*dockerContainer)}, nil
 }
 
 func normalizeName(name string) string {
 	return strings.ToLower(name)
+}
+
+func (r *dockerEnvironmentContext) configurePortBindings() error {
+	// we could use 0.0.0.0
+	portBinding := newDockerEnvironmentPortBinding(r.externalIP, r)
+	return portBinding.configurePortBindings()
+}
+
+func (r *dockerEnvironmentContext) configureContainersEnv() error {
+	return r.getValueResolver().configureContainersEnv()
+}
+
+func (r *dockerEnvironmentContext) getValueResolver() *dockerEnvironmentValueResolver {
+	return newDockerComponentValueResolver(r.externalIP, r)
 }
 
 func (r *dockerEnvironmentContext) addContainer(component DockerComponent) (*dockerContainer, error) {
@@ -49,6 +64,21 @@ func (r *dockerEnvironmentContext) getContainer(name string) (*dockerContainer, 
 	} else {
 		return container, nil
 	}
+}
+
+// implements ValueResolver
+func (r *dockerEnvironmentContext) Resolve(templateText string) (string, error) {
+	return r.getValueResolver().resolve(templateText)
+}
+
+// implements ValueResolver
+func (r *dockerEnvironmentContext) Host() string {
+	return r.externalIP
+}
+
+// implements ValueResolver
+func (r *dockerEnvironmentContext) Port(componentName string, portName string) (string, error) {
+	return r.getValueResolver().Port(componentName, portName)
 }
 
 // https://play.golang.org/p/BDt3qEQ_2H

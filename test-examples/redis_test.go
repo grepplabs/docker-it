@@ -9,8 +9,6 @@ import (
 func TestRedisCall(t *testing.T) {
 	a := assert.New(t)
 
-	dockerEnvironment.Start("it-redis")
-
 	host := dockerEnvironment.Host()
 	port, err := dockerEnvironment.Port("it-redis", "")
 	a.Nil(err)

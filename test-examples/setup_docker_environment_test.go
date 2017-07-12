@@ -2,6 +2,7 @@ package test_examples
 
 import (
 	dit "github.com/cloud-42/docker-it"
+	"github.com/cloud-42/docker-it/wait/redis"
 	"os"
 	"testing"
 )
@@ -13,7 +14,11 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	dockerEnvironment.StartParallel("it-redis")
+	if err := dockerEnvironment.StartParallel("it-redis"); err != nil {
+		dockerEnvironment.Shutdown()
+		panic(err)
+	}
+
 	code := m.Run()
 	dockerEnvironment.Shutdown()
 	os.Exit(code)
@@ -30,6 +35,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					ContainerPort: 6379,
 				},
 			},
+			AfterStart: &redis.Wait{},
 		},
 	)
 	if err != nil {

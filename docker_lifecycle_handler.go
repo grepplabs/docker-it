@@ -66,7 +66,7 @@ func (r *dockerLifecycleHandler) Start(container *dockerContainer) error {
 	}
 
 	if container.BeforeStart != nil {
-		if err := container.BeforeStart.Call(); err != nil {
+		if err := container.BeforeStart.Call(container.Name, r.context); err != nil {
 			return err
 		}
 	}
@@ -84,7 +84,7 @@ func (r *dockerLifecycleHandler) Start(container *dockerContainer) error {
 		}
 	}
 	if container.AfterStart != nil {
-		if err := container.AfterStart.Call(); err != nil {
+		if err := container.AfterStart.Call(container.Name, r.context); err != nil {
 			return err
 
 		}

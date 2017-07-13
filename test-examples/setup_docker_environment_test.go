@@ -3,6 +3,7 @@ package test_examples
 import (
 	dit "github.com/cloud-42/docker-it"
 	"github.com/cloud-42/docker-it/wait/http"
+	"github.com/cloud-42/docker-it/wait/postgres"
 	"github.com/cloud-42/docker-it/wait/redis"
 	"os"
 	"testing"
@@ -15,7 +16,13 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	if err := dockerEnvironment.StartParallel("it-redis", "it-wiremock"); err != nil {
+	components := []string{
+		"it-redis",
+		"it-wiremock",
+		"it-postgres",
+	}
+
+	if err := dockerEnvironment.StartParallel(components...); err != nil {
 		dockerEnvironment.Shutdown()
 		panic(err)
 	}
@@ -48,6 +55,17 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 				},
 			},
 			AfterStart: &http.HttpWait{UrlTemplate: `http://{{ value . "it-wiremock.Host"}}:{{ value . "it-wiremock.Port"}}/__admin`},
+		},
+		dit.DockerComponent{
+			Name:       "it-postgres",
+			Image:      "postgres:9.6",
+			FollowLogs: true,
+			ExposedPorts: []dit.Port{
+				{
+					ContainerPort: 5432,
+				},
+			},
+			AfterStart: &postgres.PostgresWait{DatabaseUrl: `postgres://postgres:postgres@{{ value . "it-postgres.Host"}}:{{ value . "it-postgres.Port"}}/postgres?sslmode=disable`},
 		},
 	)
 	if err != nil {

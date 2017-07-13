@@ -2,6 +2,7 @@ package test_examples
 
 import (
 	dit "github.com/cloud-42/docker-it"
+	"github.com/cloud-42/docker-it/wait/http"
 	"github.com/cloud-42/docker-it/wait/redis"
 	"os"
 	"testing"
@@ -14,7 +15,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	if err := dockerEnvironment.StartParallel("it-redis"); err != nil {
+	if err := dockerEnvironment.StartParallel("it-redis", "it-wiremock"); err != nil {
 		dockerEnvironment.Shutdown()
 		panic(err)
 	}
@@ -35,7 +36,18 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					ContainerPort: 6379,
 				},
 			},
-			AfterStart: &redis.Wait{},
+			AfterStart: &redis.RedisWait{},
+		},
+		dit.DockerComponent{
+			Name:       "it-wiremock",
+			Image:      "rodolpheche/wiremock",
+			FollowLogs: true,
+			ExposedPorts: []dit.Port{
+				{
+					ContainerPort: 8080,
+				},
+			},
+			AfterStart: &http.HttpWait{UrlTemplate: `http://{{ value . "it-wiremock.Host"}}:{{ value . "it-wiremock.Port"}}/__admin`},
 		},
 	)
 	if err != nil {

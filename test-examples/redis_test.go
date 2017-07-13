@@ -14,7 +14,10 @@ func TestRedisCall(t *testing.T) {
 	port, err := dockerEnvironment.Port("it-redis", "")
 	a.Nil(err)
 
-	conn, err := redis.Dial("tcp", fmt.Sprintf("%s:%s", host, port))
+	address := fmt.Sprintf("%s:%s", host, port)
+	fmt.Println(address)
+
+	conn, err := redis.Dial("tcp", address)
 	a.Nil(err)
 	defer conn.Close()
 

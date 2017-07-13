@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestWiremockCall(t *testing.T) {
+func TestHttpCall(t *testing.T) {
 	a := assert.New(t)
 
 	host := dockerEnvironment.Host()

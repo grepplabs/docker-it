@@ -37,6 +37,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 		dit.DockerComponent{
 			Name:       "it-redis",
 			Image:      "redis",
+			ForcePull:  true,
 			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
@@ -48,6 +49,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 		dit.DockerComponent{
 			Name:       "it-wiremock",
 			Image:      "rodolpheche/wiremock",
+			ForcePull:  true,
 			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
@@ -59,6 +61,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 		dit.DockerComponent{
 			Name:       "it-postgres",
 			Image:      "postgres:9.6",
+			ForcePull:  true,
 			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{

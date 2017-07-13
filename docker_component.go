@@ -3,7 +3,7 @@ package dockerit
 type DockerComponent struct {
 	Name                    string
 	Image                   string
-	ImageLocalOnly          bool
+	ForcePull               bool
 	RemoveImageAfterDestroy bool
 	ExposedPorts            []Port
 	EnvironmentVariables    map[string]string

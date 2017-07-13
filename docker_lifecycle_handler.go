@@ -38,7 +38,7 @@ func (r *dockerLifecycleHandler) Create(container *dockerContainer) error {
 		return nil
 	}
 
-	if err := r.checkOrPullDockerImage(container.Image, container.ImageLocalOnly); err != nil {
+	if err := r.checkOrPullDockerImage(container.Image, container.ForcePull); err != nil {
 		return err
 	}
 
@@ -169,7 +169,7 @@ func (r *dockerLifecycleHandler) containerExists(containerID string) (bool, erro
 	return false, nil
 }
 
-func (r *dockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocalOnly bool) error {
+func (r *dockerLifecycleHandler) checkOrPullDockerImage(image string, forcePull bool) error {
 	var imageExists bool
 	if summary, err := r.dockerClient.GetImageByName(image); err != nil {
 		return err
@@ -177,7 +177,7 @@ func (r *dockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocal
 		imageExists = summary != nil
 	}
 
-	if imageLocalOnly {
+	if !forcePull {
 		if imageExists {
 			return nil
 		} else {
@@ -187,7 +187,7 @@ func (r *dockerLifecycleHandler) checkOrPullDockerImage(image string, imageLocal
 	r.context.logger.Info.Println("Pulling image", image)
 	if err := r.dockerClient.PullImage(image); err != nil {
 		if imageExists {
-			// log: image cannot be pulled
+			r.context.logger.Info.Println("Image", image, "cannot be pulled, using existing one")
 			return nil
 		} else {
 			return err

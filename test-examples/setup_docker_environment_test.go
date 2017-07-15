@@ -2,11 +2,14 @@ package test_examples
 
 import (
 	dit "github.com/cloud-42/docker-it"
+	"github.com/cloud-42/docker-it/wait"
 	"github.com/cloud-42/docker-it/wait/http"
+	"github.com/cloud-42/docker-it/wait/mysql"
 	"github.com/cloud-42/docker-it/wait/postgres"
 	"github.com/cloud-42/docker-it/wait/redis"
 	"os"
 	"testing"
+	"time"
 )
 
 var dockerEnvironment *dit.DockerEnvironment
@@ -18,8 +21,9 @@ func init() {
 func TestMain(m *testing.M) {
 	components := []string{
 		"it-redis",
-		"it-wiremock",
+		"it-http",
 		"it-postgres",
+		"it-mysql",
 	}
 
 	if err := dockerEnvironment.StartParallel(components...); err != nil {
@@ -47,7 +51,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			AfterStart: &redis.RedisWait{},
 		},
 		dit.DockerComponent{
-			Name:       "it-wiremock",
+			Name:       "it-http",
 			Image:      "rodolpheche/wiremock",
 			ForcePull:  true,
 			FollowLogs: true,
@@ -56,7 +60,8 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					ContainerPort: 8080,
 				},
 			},
-			AfterStart: &http.HttpWait{UrlTemplate: `http://{{ value . "it-wiremock.Host"}}:{{ value . "it-wiremock.Port"}}/__admin`},
+			AfterStart: &http.HttpWait{
+				UrlTemplate: `http://{{ value . "it-http.Host"}}:{{ value . "it-http.Port"}}/__admin`},
 		},
 		dit.DockerComponent{
 			Name:       "it-postgres",
@@ -68,7 +73,26 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					ContainerPort: 5432,
 				},
 			},
-			AfterStart: &postgres.PostgresWait{DatabaseUrl: `postgres://postgres:postgres@{{ value . "it-postgres.Host"}}:{{ value . "it-postgres.Port"}}/postgres?sslmode=disable`},
+			AfterStart: &postgres.PostgresWait{
+				DatabaseUrl: `postgres://postgres:postgres@{{ value . "it-postgres.Host"}}:{{ value . "it-postgres.Port"}}/postgres?sslmode=disable`},
+		},
+		dit.DockerComponent{
+			Name:       "it-mysql",
+			Image:      "mysql:8.0",
+			ForcePull:  true,
+			FollowLogs: true,
+			ExposedPorts: []dit.Port{
+				{
+					ContainerPort: 3306,
+				},
+			},
+			EnvironmentVariables: map[string]string{
+				"MYSQL_ROOT_PASSWORD": "mypassword",
+			},
+			AfterStart: &mysql.MySQLWait{
+				DatabaseUrl: `root:mypassword@tcp({{ value . "it-mysql.Host"}}:{{ value . "it-mysql.Port"}})/`,
+				Wait:        wait.Wait{AtMost: 60 * time.Second},
+			},
 		},
 	)
 	if err != nil {

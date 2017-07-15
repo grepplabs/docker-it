@@ -14,7 +14,7 @@ func TestHttpCall(t *testing.T) {
 	a := assert.New(t)
 
 	host := dockerEnvironment.Host()
-	port, err := dockerEnvironment.Port("it-wiremock", "")
+	port, err := dockerEnvironment.Port("it-http", "")
 	a.Nil(err)
 
 	url := fmt.Sprintf("http://%s:%s/__admin/requests", host, port)

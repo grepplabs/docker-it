@@ -43,9 +43,6 @@ func NewHttpWait(urlTemplate string, options Options) *httpWait {
 
 // implements dockerit.Callback
 func (r *httpWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if r.urlTemplate == "" {
-		return errors.New("http wait: UrlTemplate must not be empty")
-	}
 	if url, err := resolver.Resolve(r.urlTemplate); err != nil {
 		return err
 	} else {

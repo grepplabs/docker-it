@@ -3,6 +3,7 @@ package test_examples
 import (
 	dit "github.com/cloud-42/docker-it"
 	"github.com/cloud-42/docker-it/wait"
+	"github.com/cloud-42/docker-it/wait/elastic"
 	"github.com/cloud-42/docker-it/wait/http"
 	"github.com/cloud-42/docker-it/wait/kafka"
 	"github.com/cloud-42/docker-it/wait/mysql"
@@ -26,8 +27,8 @@ func TestMain(m *testing.M) {
 		"it-postgres",
 		"it-mysql",
 		"it-kafka",
+		"it-es",
 	}
-
 	if err := dockerEnvironment.StartParallel(components...); err != nil {
 		dockerEnvironment.Shutdown()
 		panic(err)
@@ -125,6 +126,25 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			AfterStart: kafka.NewKafkaWait(
 				`{{ value . "it-kafka.Host"}}:{{ value . "it-kafka.Port"}}`,
 				kafka.Options{},
+			),
+		},
+		dit.DockerComponent{
+			Name:       "it-es",
+			Image:      "docker.elastic.co/elasticsearch/elasticsearch:5.5.0",
+			ForcePull:  true,
+			FollowLogs: false,
+			ExposedPorts: []dit.Port{
+				{
+					ContainerPort: 9200,
+				},
+			},
+			EnvironmentVariables: map[string]string{
+				"http.host":      "0.0.0.0",
+				"transport.host": "127.0.0.1",
+			},
+			AfterStart: elastic.NewElasticWait(
+				`http://{{ value . "it-es.Host"}}:{{ value . "it-es.Port"}}/`,
+				elastic.Options{},
 			),
 		},
 	)

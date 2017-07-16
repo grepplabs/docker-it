@@ -48,7 +48,7 @@ func (r *Wait) GetLogger(componentName string) *log.Logger {
 	}
 }
 
-func (r *Wait) GetTimeout() time.Duration {
+func (r *Wait) GetAtMost() time.Duration {
 	return r.atMost
 }
 
@@ -57,7 +57,7 @@ func (r *Wait) GetDelay() time.Duration {
 }
 
 func (r *Wait) Poll(componentName string, readinessProbe func() error) error {
-	timeout := r.GetTimeout()
+	timeout := r.GetAtMost()
 	delay := r.GetDelay()
 
 	var err error

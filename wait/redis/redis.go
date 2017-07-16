@@ -14,21 +14,20 @@ type Options struct {
 }
 
 type redisWait struct {
-	Options
+	wait.Wait
+	portName string
 }
 
 func NewRedisWait(options Options) *redisWait {
 	return &redisWait{
-		Options{
-			Wait:     options.Wait,
-			PortName: options.PortName,
-		},
+		Wait:     options.Wait,
+		portName: options.PortName,
 	}
 }
 
 // implements dockerit.Callback
 func (r *redisWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if port, err := resolver.Port(componentName, r.PortName); err != nil {
+	if port, err := resolver.Port(componentName, r.portName); err != nil {
 		return err
 	} else {
 		host := resolver.Host()

@@ -10,31 +10,29 @@ import (
 
 type Options struct {
 	wait.Wait
-	DatabaseUrl string
 }
 
 type postgresWait struct {
-	Options
+	wait.Wait
+	databaseUrl string
 }
 
-func NewPostgresWait(options Options) *postgresWait {
+func NewPostgresWait(databaseUrl string, options Options) *postgresWait {
+	if databaseUrl == "" {
+		panic(errors.New("postgres wait: DatabaseUrl must not be empty"))
+	}
 	return &postgresWait{
-		Options{
-			Wait:        options.Wait,
-			DatabaseUrl: options.DatabaseUrl,
-		},
+		Wait:        options.Wait,
+		databaseUrl: databaseUrl,
 	}
 }
 
 // implements dockerit.Callback
 func (r *postgresWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if r.DatabaseUrl == "" {
-		return errors.New("postgres wait: DatabaseUrl must not be empty")
-	}
-	databaseWait := database.NewDatabaseWait(database.Options{
-		Wait:        r.Wait,
-		DatabaseUrl: r.DatabaseUrl,
-		DriverName:  "postgres",
-	})
+	databaseWait := database.NewDatabaseWait(
+		"postgres", r.databaseUrl,
+		database.Options{
+			Wait: r.Wait,
+		})
 	return databaseWait.Call(componentName, resolver)
 }

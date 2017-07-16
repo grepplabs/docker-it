@@ -10,31 +10,29 @@ import (
 
 type Options struct {
 	wait.Wait
-	DatabaseUrl string
 }
 
-type mySQLWaitWait struct {
-	Options
+type mySQLWait struct {
+	wait.Wait
+	databaseUrl string
 }
 
-func NewMySQLWait(options Options) *mySQLWaitWait {
-	return &mySQLWaitWait{
-		Options{
-			Wait:        options.Wait,
-			DatabaseUrl: options.DatabaseUrl,
-		},
+func NewMySQLWait(databaseUrl string, options Options) *mySQLWait {
+	if databaseUrl == "" {
+		panic(errors.New("mysql wait: DatabaseUrl must not be empty"))
+	}
+	return &mySQLWait{
+		Wait:        options.Wait,
+		databaseUrl: databaseUrl,
 	}
 }
 
 // implements dockerit.Callback
-func (r *mySQLWaitWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if r.DatabaseUrl == "" {
-		return errors.New("mysql wait: DatabaseUrl must not be empty")
-	}
-	databaseWait := database.NewDatabaseWait(database.Options{
-		Wait:        r.Wait,
-		DatabaseUrl: r.DatabaseUrl,
-		DriverName:  "mysql",
-	})
+func (r *mySQLWait) Call(componentName string, resolver dit.ValueResolver) error {
+	databaseWait := database.NewDatabaseWait(
+		"mysql", r.databaseUrl,
+		database.Options{
+			Wait: r.Wait,
+		})
 	return databaseWait.Call(componentName, resolver)
 }

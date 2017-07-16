@@ -15,34 +15,34 @@ const (
 
 type Options struct {
 	wait.Wait
-	BrokerAddrTemplate string
-	Topic              string
+	Topic string
 }
 
 type kafkaWait struct {
-	Options
+	wait.Wait
+	brokerAddrTemplate string
+	topic              string
 }
 
-func NewKafkaWait(options Options) *kafkaWait {
+func NewKafkaWait(brokerAddrTemplate string, options Options) *kafkaWait {
+	if brokerAddrTemplate == "" {
+		panic(errors.New("kafka wait: BrokerAddrTemplate must not be empty"))
+	}
+
 	topic := options.Topic
 	if topic == "" {
 		topic = DefaultTopic
 	}
 	return &kafkaWait{
-		Options{
-			Wait:               options.Wait,
-			BrokerAddrTemplate: options.BrokerAddrTemplate,
-			Topic:              topic,
-		},
+		brokerAddrTemplate: brokerAddrTemplate,
+		Wait:               options.Wait,
+		topic:              topic,
 	}
 }
 
 // implements dockerit.Callback
 func (r *kafkaWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if r.BrokerAddrTemplate == "" {
-		return errors.New("kafka wait: BrokerAddrTemplate must not be empty")
-	}
-	if url, err := resolver.Resolve(r.BrokerAddrTemplate); err != nil {
+	if url, err := resolver.Resolve(r.brokerAddrTemplate); err != nil {
 		return err
 	} else {
 		err := r.pollKafka(componentName, url)
@@ -82,7 +82,7 @@ func (r *kafkaWait) produce(brokerAddr string) (int32, error) {
 	defer producer.Close()
 
 	msg := &sarama.ProducerMessage{
-		Topic: r.Topic,
+		Topic: r.topic,
 		Value: sarama.StringEncoder("Ping"),
 	}
 
@@ -105,7 +105,7 @@ func (r *kafkaWait) consume(brokerAddr string, partition int32) error {
 	}
 	defer consumer.Close()
 
-	partitionConsumer, err := consumer.ConsumePartition(r.Topic, partition, sarama.OffsetOldest)
+	partitionConsumer, err := consumer.ConsumePartition(r.topic, partition, sarama.OffsetOldest)
 	if err != nil {
 		return err
 	}

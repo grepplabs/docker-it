@@ -16,34 +16,37 @@ const (
 
 type Options struct {
 	wait.Wait
-	UrlTemplate string
-	Method      string
+	Method string
 }
 
 type httpWait struct {
-	Options
+	wait.Wait
+	method      string
+	urlTemplate string
 }
 
-func NewHttpWait(options Options) *httpWait {
+func NewHttpWait(urlTemplate string, options Options) *httpWait {
+	if urlTemplate == "" {
+		panic(errors.New("http wait: UrlTemplate must not be empty"))
+	}
+
 	method := options.Method
 	if method == "" {
 		method = DefaultMethod
 	}
 	return &httpWait{
-		Options{
-			Wait:        options.Wait,
-			UrlTemplate: options.UrlTemplate,
-			Method:      method,
-		},
+		Wait:        options.Wait,
+		urlTemplate: urlTemplate,
+		method:      method,
 	}
 }
 
 // implements dockerit.Callback
 func (r *httpWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if r.UrlTemplate == "" {
+	if r.urlTemplate == "" {
 		return errors.New("http wait: UrlTemplate must not be empty")
 	}
-	if url, err := resolver.Resolve(r.UrlTemplate); err != nil {
+	if url, err := resolver.Resolve(r.urlTemplate); err != nil {
 		return err
 	} else {
 		err := r.pollHttp(componentName, url)
@@ -67,7 +70,7 @@ func (r *httpWait) pollHttp(componentName string, url string) error {
 
 func (r *httpWait) getRequest(url string) error {
 	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-	req, err := http.NewRequest(r.Method, url, nil)
+	req, err := http.NewRequest(r.method, url, nil)
 	if err != nil {
 		return err
 	}

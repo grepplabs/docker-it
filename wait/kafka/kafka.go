@@ -2,24 +2,43 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/Shopify/sarama"
 	dit "github.com/cloud-42/docker-it"
 	"github.com/cloud-42/docker-it/wait"
 	"github.com/pkg/errors"
-	"github.com/Shopify/sarama"
 	"time"
 )
+
 const (
-	DefaultTopic  = "kafka-connectivity-test"
+	DefaultTopic = "kafka-connectivity-test"
 )
 
-type KafkaWait struct {
+type Options struct {
 	wait.Wait
 	BrokerAddrTemplate string
-	Topic string
+	Topic              string
+}
+
+type kafkaWait struct {
+	Options
+}
+
+func NewKafkaWait(options Options) *kafkaWait {
+	topic := options.Topic
+	if topic == "" {
+		topic = DefaultTopic
+	}
+	return &kafkaWait{
+		Options{
+			Wait:               options.Wait,
+			BrokerAddrTemplate: options.BrokerAddrTemplate,
+			Topic:              topic,
+		},
+	}
 }
 
 // implements dockerit.Callback
-func (r *KafkaWait) Call(componentName string, resolver dit.ValueResolver) error {
+func (r *kafkaWait) Call(componentName string, resolver dit.ValueResolver) error {
 	if r.BrokerAddrTemplate == "" {
 		return errors.New("kafka wait: BrokerAddrTemplate must not be empty")
 	}
@@ -34,13 +53,13 @@ func (r *KafkaWait) Call(componentName string, resolver dit.ValueResolver) error
 	}
 }
 
-func (r *KafkaWait) pollKafka(componentName string, url string) error {
+func (r *kafkaWait) pollKafka(componentName string, url string) error {
 
 	logger := r.GetLogger(componentName)
 	logger.Println("Waiting for kafka", url)
 
 	f := func() error {
-		partition, err :=  r.produce(url)
+		partition, err := r.produce(url)
 		if err != nil {
 			return err
 		}
@@ -49,7 +68,7 @@ func (r *KafkaWait) pollKafka(componentName string, url string) error {
 	return r.Poll(componentName, f)
 }
 
-func (r *KafkaWait) produce(brokerAddr string) (int32,error) {
+func (r *kafkaWait) produce(brokerAddr string) (int32, error) {
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.Producer.Retry.Max = 1
@@ -62,9 +81,8 @@ func (r *KafkaWait) produce(brokerAddr string) (int32,error) {
 	}
 	defer producer.Close()
 
-	topic := r.getTopic()
 	msg := &sarama.ProducerMessage{
-		Topic: topic,
+		Topic: r.Topic,
 		Value: sarama.StringEncoder("Ping"),
 	}
 
@@ -75,7 +93,7 @@ func (r *KafkaWait) produce(brokerAddr string) (int32,error) {
 	return partition, nil
 }
 
-func (r *KafkaWait) consume(brokerAddr string, partition int32) error {
+func (r *kafkaWait) consume(brokerAddr string, partition int32) error {
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -87,8 +105,7 @@ func (r *KafkaWait) consume(brokerAddr string, partition int32) error {
 	}
 	defer consumer.Close()
 
-	topic := r.getTopic()
-	partitionConsumer, err := consumer.ConsumePartition(topic, partition, sarama.OffsetOldest)
+	partitionConsumer, err := consumer.ConsumePartition(r.Topic, partition, sarama.OffsetOldest)
 	if err != nil {
 		return err
 	}
@@ -97,15 +114,7 @@ func (r *KafkaWait) consume(brokerAddr string, partition int32) error {
 		return err
 	case _ = <-partitionConsumer.Messages():
 		return nil
-	case <- time.After(r.GetDelay()):
+	case <-time.After(r.GetDelay()):
 		return errors.New("Ping message was not received")
-	}
-}
-
-func (r *KafkaWait) getTopic() string {
-	if r.Topic == "" {
-		return DefaultTopic
-	} else {
-		return r.Topic
 	}
 }

@@ -2,7 +2,6 @@ package test_examples
 
 import (
 	dit "github.com/cloud-42/docker-it"
-	"github.com/cloud-42/docker-it/wait"
 	"github.com/cloud-42/docker-it/wait/http"
 	"github.com/cloud-42/docker-it/wait/kafka"
 	"github.com/cloud-42/docker-it/wait/mysql"
@@ -10,6 +9,7 @@ import (
 	"github.com/cloud-42/docker-it/wait/redis"
 	"os"
 	"testing"
+	"github.com/cloud-42/docker-it/wait"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					ContainerPort: 6379,
 				},
 			},
-			AfterStart: &redis.RedisWait{},
+			AfterStart: redis.NewRedisWait(redis.Options{}),
 		},
 		dit.DockerComponent{
 			Name:       "it-http",
@@ -62,8 +62,9 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					ContainerPort: 8080,
 				},
 			},
-			AfterStart: &http.HttpWait{
-				UrlTemplate: `http://{{ value . "it-http.Host"}}:{{ value . "it-http.Port"}}/__admin`},
+			AfterStart: http.NewHttpWait(http.Options{
+				UrlTemplate: `http://{{ value . "it-http.Host"}}:{{ value . "it-http.Port"}}/__admin`,
+			}),
 		},
 		dit.DockerComponent{
 			Name:       "it-postgres",
@@ -75,8 +76,9 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					ContainerPort: 5432,
 				},
 			},
-			AfterStart: &postgres.PostgresWait{
-				DatabaseUrl: `postgres://postgres:postgres@{{ value . "it-postgres.Host"}}:{{ value . "it-postgres.Port"}}/postgres?sslmode=disable`},
+			AfterStart: postgres.NewPostgresWait(postgres.Options{
+				DatabaseUrl: `postgres://postgres:postgres@{{ value . "it-postgres.Host"}}:{{ value . "it-postgres.Port"}}/postgres?sslmode=disable`,
+			}),
 		},
 		dit.DockerComponent{
 			Name:       "it-mysql",
@@ -91,10 +93,10 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			EnvironmentVariables: map[string]string{
 				"MYSQL_ROOT_PASSWORD": "mypassword",
 			},
-			AfterStart: &mysql.MySQLWait{
+			AfterStart: mysql.NewMySQLWait(mysql.Options{
 				DatabaseUrl: `root:mypassword@tcp({{ value . "it-mysql.Host"}}:{{ value . "it-mysql.Port"}})/`,
-				Wait:        wait.Wait{AtMost: 60 * time.Second},
-			},
+				Wait: wait.Wait{AtMost: 60 * time.Second},
+			}),
 		},
 		// see https://github.com/spotify/docker-kafka/pull/70
 		dit.DockerComponent{
@@ -117,9 +119,9 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 				"ADVERTISED_HOST": `{{ value . "it-kafka.Host"}}`,
 				"ADVERTISED_PORT": `{{ value . "it-kafka.Port"}}`,
 			},
-			AfterStart: &kafka.KafkaWait{
+			AfterStart: kafka.NewKafkaWait(kafka.Options{
 				BrokerAddrTemplate: `{{ value . "it-kafka.Host"}}:{{ value . "it-kafka.Port"}}`,
-			},
+			}),
 		},
 	)
 	if err != nil {

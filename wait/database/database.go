@@ -8,14 +8,28 @@ import (
 	"github.com/pkg/errors"
 )
 
-type DatabaseWait struct {
+type Options struct {
 	wait.Wait
 	DatabaseUrl string
 	DriverName  string
 }
 
+type databaseWait struct {
+	Options
+}
+
+func NewDatabaseWait(options Options) *databaseWait {
+	return &databaseWait{
+		Options{
+			Wait:        options.Wait,
+			DatabaseUrl: options.DatabaseUrl,
+			DriverName:  options.DriverName,
+		},
+	}
+}
+
 // implements dockerit.Callback
-func (r *DatabaseWait) Call(componentName string, resolver dit.ValueResolver) error {
+func (r *databaseWait) Call(componentName string, resolver dit.ValueResolver) error {
 	if r.DatabaseUrl == "" {
 		return errors.New("database wait: DatabaseUrl must not be empty")
 	}
@@ -33,7 +47,7 @@ func (r *DatabaseWait) Call(componentName string, resolver dit.ValueResolver) er
 	}
 }
 
-func (r *DatabaseWait) pollConnect(componentName string, url string) error {
+func (r *databaseWait) pollConnect(componentName string, url string) error {
 
 	logger := r.GetLogger(componentName)
 	logger.Printf("Waiting for %s %s\n", r.DriverName, url)
@@ -44,7 +58,7 @@ func (r *DatabaseWait) pollConnect(componentName string, url string) error {
 	return r.Poll(componentName, f)
 }
 
-func (r *DatabaseWait) connect(url string) error {
+func (r *databaseWait) connect(url string) error {
 	db, err := sql.Open(r.DriverName, url)
 	if err != nil {
 		return err

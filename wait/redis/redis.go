@@ -8,13 +8,26 @@ import (
 	"time"
 )
 
-type RedisWait struct {
+type Options struct {
 	wait.Wait
 	PortName string
 }
 
+type redisWait struct {
+	Options
+}
+
+func NewRedisWait(options Options) *redisWait {
+	return &redisWait{
+		Options{
+			Wait:     options.Wait,
+			PortName: options.PortName,
+		},
+	}
+}
+
 // implements dockerit.Callback
-func (r *RedisWait) Call(componentName string, resolver dit.ValueResolver) error {
+func (r *redisWait) Call(componentName string, resolver dit.ValueResolver) error {
 	if port, err := resolver.Port(componentName, r.PortName); err != nil {
 		return err
 	} else {
@@ -27,7 +40,7 @@ func (r *RedisWait) Call(componentName string, resolver dit.ValueResolver) error
 	}
 }
 
-func (r *RedisWait) pollRedis(componentName string, host string, port string) error {
+func (r *redisWait) pollRedis(componentName string, host string, port string) error {
 
 	logger := r.GetLogger(componentName)
 	logger.Println("Waiting for redis", fmt.Sprintf("%s:%s", host, port))
@@ -38,7 +51,7 @@ func (r *RedisWait) pollRedis(componentName string, host string, port string) er
 	return r.Poll(componentName, f)
 }
 
-func (r *RedisWait) ping(host string, port string) error {
+func (r *redisWait) ping(host string, port string) error {
 	conn, err := redis.Dial("tcp", fmt.Sprintf("%s:%s", host, port),
 		redis.DialConnectTimeout(time.Second), redis.DialReadTimeout(time.Second), redis.DialWriteTimeout(time.Second))
 	if err != nil {

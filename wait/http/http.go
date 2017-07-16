@@ -14,14 +14,32 @@ const (
 	DefaultMethod = "GET"
 )
 
-type HttpWait struct {
+type Options struct {
 	wait.Wait
 	UrlTemplate string
 	Method      string
 }
 
+type httpWait struct {
+	Options
+}
+
+func NewHttpWait(options Options) *httpWait {
+	method := options.Method
+	if method == "" {
+		method = DefaultMethod
+	}
+	return &httpWait{
+		Options{
+			Wait:        options.Wait,
+			UrlTemplate: options.UrlTemplate,
+			Method:      method,
+		},
+	}
+}
+
 // implements dockerit.Callback
-func (r *HttpWait) Call(componentName string, resolver dit.ValueResolver) error {
+func (r *httpWait) Call(componentName string, resolver dit.ValueResolver) error {
 	if r.UrlTemplate == "" {
 		return errors.New("http wait: UrlTemplate must not be empty")
 	}
@@ -36,7 +54,7 @@ func (r *HttpWait) Call(componentName string, resolver dit.ValueResolver) error 
 	}
 }
 
-func (r *HttpWait) pollHttp(componentName string, url string) error {
+func (r *httpWait) pollHttp(componentName string, url string) error {
 
 	logger := r.GetLogger(componentName)
 	logger.Println("Waiting for http", url)
@@ -47,9 +65,9 @@ func (r *HttpWait) pollHttp(componentName string, url string) error {
 	return r.Poll(componentName, f)
 }
 
-func (r *HttpWait) getRequest(url string) error {
+func (r *httpWait) getRequest(url string) error {
 	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-	req, err := http.NewRequest(r.getMethod(), url, nil)
+	req, err := http.NewRequest(r.Method, url, nil)
 	if err != nil {
 		return err
 	}
@@ -65,13 +83,5 @@ func (r *HttpWait) getRequest(url string) error {
 		return nil
 	} else {
 		return fmt.Errorf("server %s returned status: %v", url, resp.Status)
-	}
-}
-
-func (r *HttpWait) getMethod() string {
-	if r.Method == "" {
-		return DefaultMethod
-	} else {
-		return r.Method
 	}
 }

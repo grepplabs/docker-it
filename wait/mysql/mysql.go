@@ -9,11 +9,11 @@ import (
 )
 
 type Options struct {
-	wait.Wait
+	WaitOptions wait.Options
 }
 
 type mySQLWait struct {
-	wait.Wait
+	waitOptions wait.Options
 	databaseUrl string
 }
 
@@ -22,7 +22,7 @@ func NewMySQLWait(databaseUrl string, options Options) *mySQLWait {
 		panic(errors.New("mysql wait: DatabaseUrl must not be empty"))
 	}
 	return &mySQLWait{
-		Wait:        options.Wait,
+		waitOptions: options.WaitOptions,
 		databaseUrl: databaseUrl,
 	}
 }
@@ -32,7 +32,7 @@ func (r *mySQLWait) Call(componentName string, resolver dit.ValueResolver) error
 	databaseWait := database.NewDatabaseWait(
 		"mysql", r.databaseUrl,
 		database.Options{
-			Wait: r.Wait,
+			WaitOptions: r.waitOptions,
 		})
 	return databaseWait.Call(componentName, resolver)
 }

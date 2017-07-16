@@ -9,12 +9,14 @@ import (
 )
 
 type Options struct {
-	wait.Wait
+	WaitOptions        wait.Options
+	Username, Password string
 }
 
 type elasticWait struct {
 	wait.Wait
-	urlTemplate string
+	urlTemplate        string
+	username, password string
 }
 
 func NewElasticWait(urlTemplate string, options Options) *elasticWait {
@@ -22,8 +24,10 @@ func NewElasticWait(urlTemplate string, options Options) *elasticWait {
 		panic(errors.New("elastic wait: UrlTemplate must not be empty"))
 	}
 	return &elasticWait{
-		Wait:        options.Wait,
+		Wait:        wait.NewWait(options.WaitOptions),
 		urlTemplate: urlTemplate,
+		username:    options.Username,
+		password:    options.Password,
 	}
 }
 
@@ -52,7 +56,12 @@ func (r *elasticWait) pollElastic(componentName string, url string) error {
 }
 
 func (r *elasticWait) waitForGreenStatus(url string) error {
-	client, err := v5.NewClient(v5.SetURL(url))
+	clientOptions := make([]v5.ClientOptionFunc, 0)
+	clientOptions = append(clientOptions, v5.SetURL(url))
+	if r.password != "" && r.username != "" {
+		clientOptions = append(clientOptions, v5.SetBasicAuth(r.username, r.password))
+	}
+	client, err := v5.NewClient(clientOptions...)
 	if err != nil {
 		return err
 	}

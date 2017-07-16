@@ -9,11 +9,11 @@ import (
 )
 
 type Options struct {
-	wait.Wait
+	WaitOptions wait.Options
 }
 
 type postgresWait struct {
-	wait.Wait
+	waitOptions wait.Options
 	databaseUrl string
 }
 
@@ -22,7 +22,7 @@ func NewPostgresWait(databaseUrl string, options Options) *postgresWait {
 		panic(errors.New("postgres wait: DatabaseUrl must not be empty"))
 	}
 	return &postgresWait{
-		Wait:        options.Wait,
+		waitOptions: options.WaitOptions,
 		databaseUrl: databaseUrl,
 	}
 }
@@ -32,7 +32,7 @@ func (r *postgresWait) Call(componentName string, resolver dit.ValueResolver) er
 	databaseWait := database.NewDatabaseWait(
 		"postgres", r.databaseUrl,
 		database.Options{
-			Wait: r.Wait,
+			WaitOptions: r.waitOptions,
 		})
 	return databaseWait.Call(componentName, resolver)
 }

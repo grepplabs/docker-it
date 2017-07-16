@@ -9,7 +9,7 @@ import (
 )
 
 type Options struct {
-	wait.Wait
+	WaitOptions wait.Options
 }
 
 type databaseWait struct {
@@ -26,7 +26,7 @@ func NewDatabaseWait(driverName string, databaseUrl string, options Options) *da
 		panic(errors.New("database wait: DriverName must not be empty"))
 	}
 	return &databaseWait{
-		Wait:        options.Wait,
+		Wait:        wait.NewWait(options.WaitOptions),
 		driverName:  driverName,
 		databaseUrl: databaseUrl,
 	}

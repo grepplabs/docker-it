@@ -98,7 +98,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			AfterStart: mysql.NewMySQLWait(
 				`root:mypassword@tcp({{ value . "it-mysql.Host"}}:{{ value . "it-mysql.Port"}})/`,
 				mysql.Options{
-					Wait: wait.NewWait(wait.Options{AtMost: 60 * time.Second}),
+					WaitOptions: wait.Options{AtMost: 60 * time.Second},
 				},
 			),
 		},
@@ -110,12 +110,10 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			FollowLogs: false,
 			ExposedPorts: []dit.Port{
 				{
-					HostPort:      9092,
 					ContainerPort: 9092,
 				},
 				{
 					Name:          "zookeeper",
-					HostPort:      2181,
 					ContainerPort: 2181,
 				},
 			},
@@ -144,7 +142,10 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			},
 			AfterStart: elastic.NewElasticWait(
 				`http://{{ value . "it-es.Host"}}:{{ value . "it-es.Port"}}/`,
-				elastic.Options{},
+				elastic.Options{
+					Username: "elastic",
+					Password: "changeme",
+				},
 			),
 		},
 	)

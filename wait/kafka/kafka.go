@@ -14,8 +14,8 @@ const (
 )
 
 type Options struct {
-	wait.Wait
-	Topic string
+	WaitOptions wait.Options
+	Topic       string
 }
 
 type kafkaWait struct {
@@ -35,7 +35,7 @@ func NewKafkaWait(brokerAddrTemplate string, options Options) *kafkaWait {
 	}
 	return &kafkaWait{
 		brokerAddrTemplate: brokerAddrTemplate,
-		Wait:               options.Wait,
+		Wait:               wait.NewWait(options.WaitOptions),
 		topic:              topic,
 	}
 }

@@ -15,8 +15,8 @@ const (
 )
 
 type Options struct {
-	wait.Wait
-	Method string
+	WaitOptions wait.Options
+	Method      string
 }
 
 type httpWait struct {
@@ -35,7 +35,7 @@ func NewHttpWait(urlTemplate string, options Options) *httpWait {
 		method = DefaultMethod
 	}
 	return &httpWait{
-		Wait:        options.Wait,
+		Wait:        wait.NewWait(options.WaitOptions),
 		urlTemplate: urlTemplate,
 		method:      method,
 	}

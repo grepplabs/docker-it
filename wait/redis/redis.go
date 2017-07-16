@@ -9,8 +9,8 @@ import (
 )
 
 type Options struct {
-	wait.Wait
-	PortName string
+	WaitOptions wait.Options
+	PortName    string
 }
 
 type redisWait struct {
@@ -20,7 +20,7 @@ type redisWait struct {
 
 func NewRedisWait(options Options) *redisWait {
 	return &redisWait{
-		Wait:     options.Wait,
+		Wait:     wait.NewWait(options.WaitOptions),
 		portName: options.PortName,
 	}
 }

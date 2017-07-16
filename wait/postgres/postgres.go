@@ -8,21 +8,31 @@ import (
 	"github.com/pkg/errors"
 )
 
-type PostgresWait struct {
+type Options struct {
 	wait.Wait
-	DatabaseUrl string
+}
+
+type postgresWait struct {
+	wait.Wait
+	databaseUrl string
+}
+
+func NewPostgresWait(databaseUrl string, options Options) *postgresWait {
+	if databaseUrl == "" {
+		panic(errors.New("postgres wait: DatabaseUrl must not be empty"))
+	}
+	return &postgresWait{
+		Wait:        options.Wait,
+		databaseUrl: databaseUrl,
+	}
 }
 
 // implements dockerit.Callback
-func (r *PostgresWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if r.DatabaseUrl == "" {
-		return errors.New("postgres wait: DatabaseUrl must not be empty")
-	}
-
-	databaseWait := database.DatabaseWait{
-		Wait:        r.Wait,
-		DatabaseUrl: r.DatabaseUrl,
-		DriverName:  "postgres",
-	}
+func (r *postgresWait) Call(componentName string, resolver dit.ValueResolver) error {
+	databaseWait := database.NewDatabaseWait(
+		"postgres", r.databaseUrl,
+		database.Options{
+			Wait: r.Wait,
+		})
 	return databaseWait.Call(componentName, resolver)
 }

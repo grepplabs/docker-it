@@ -8,21 +8,31 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type MySQLWait struct {
+type Options struct {
 	wait.Wait
-	DatabaseUrl string
+}
+
+type mySQLWait struct {
+	wait.Wait
+	databaseUrl string
+}
+
+func NewMySQLWait(databaseUrl string, options Options) *mySQLWait {
+	if databaseUrl == "" {
+		panic(errors.New("mysql wait: DatabaseUrl must not be empty"))
+	}
+	return &mySQLWait{
+		Wait:        options.Wait,
+		databaseUrl: databaseUrl,
+	}
 }
 
 // implements dockerit.Callback
-func (r *MySQLWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if r.DatabaseUrl == "" {
-		return errors.New("mysql wait: DatabaseUrl must not be empty")
-	}
-
-	databaseWait := database.DatabaseWait{
-		Wait:        r.Wait,
-		DatabaseUrl: r.DatabaseUrl,
-		DriverName:  "mysql",
-	}
+func (r *mySQLWait) Call(componentName string, resolver dit.ValueResolver) error {
+	databaseWait := database.NewDatabaseWait(
+		"mysql", r.databaseUrl,
+		database.Options{
+			Wait: r.Wait,
+		})
 	return databaseWait.Call(componentName, resolver)
 }

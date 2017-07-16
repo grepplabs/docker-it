@@ -26,6 +26,7 @@ func TestHttpCall(t *testing.T) {
 
 	req = req.WithContext(ctx)
 	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err)
 	defer resp.Body.Close()
 
 	a.EqualValues(resp.StatusCode, http.StatusOK)

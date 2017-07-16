@@ -12,35 +12,50 @@ const (
 	DefaultDelay  = time.Second
 )
 
-type Wait struct {
+type Options struct {
 	AtMost time.Duration
 	Delay  time.Duration
 	Logger *log.Logger
 }
 
+type Wait struct {
+	atMost time.Duration
+	delay  time.Duration
+	logger *log.Logger
+}
+
+func NewWait(options Options) Wait {
+	atMost := options.AtMost
+	if options.AtMost == 0 {
+		atMost = DefaultAtMost
+	}
+	delay := options.Delay
+	if options.Delay == 0 {
+		delay = DefaultDelay
+	}
+	return Wait{
+		atMost: atMost,
+		delay:  delay,
+		logger: options.Logger,
+	}
+}
+
 func (r *Wait) GetLogger(componentName string) *log.Logger {
-	if r.Logger != nil {
-		return r.Logger
+	if r.logger != nil {
+		return r.logger
 	} else {
 		return log.New(os.Stdout, fmt.Sprintf("WAIT FOR %s: ", componentName), log.Ldate|log.Ltime)
 	}
 }
 
 func (r *Wait) GetTimeout() time.Duration {
-	if r.AtMost == 0 {
-		return DefaultAtMost
-	} else {
-		return r.AtMost
-	}
+	return r.atMost
 }
 
 func (r *Wait) GetDelay() time.Duration {
-	if r.Delay == 0 {
-		return DefaultDelay
-	} else {
-		return r.Delay
-	}
+	return r.delay
 }
+
 func (r *Wait) Poll(componentName string, readinessProbe func() error) error {
 	timeout := r.GetTimeout()
 	delay := r.GetDelay()

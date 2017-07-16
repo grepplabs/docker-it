@@ -14,18 +14,39 @@ const (
 	DefaultMethod = "GET"
 )
 
-type HttpWait struct {
+type Options struct {
 	wait.Wait
-	UrlTemplate string
-	Method      string
+	Method string
+}
+
+type httpWait struct {
+	wait.Wait
+	method      string
+	urlTemplate string
+}
+
+func NewHttpWait(urlTemplate string, options Options) *httpWait {
+	if urlTemplate == "" {
+		panic(errors.New("http wait: UrlTemplate must not be empty"))
+	}
+
+	method := options.Method
+	if method == "" {
+		method = DefaultMethod
+	}
+	return &httpWait{
+		Wait:        options.Wait,
+		urlTemplate: urlTemplate,
+		method:      method,
+	}
 }
 
 // implements dockerit.Callback
-func (r *HttpWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if r.UrlTemplate == "" {
+func (r *httpWait) Call(componentName string, resolver dit.ValueResolver) error {
+	if r.urlTemplate == "" {
 		return errors.New("http wait: UrlTemplate must not be empty")
 	}
-	if url, err := resolver.Resolve(r.UrlTemplate); err != nil {
+	if url, err := resolver.Resolve(r.urlTemplate); err != nil {
 		return err
 	} else {
 		err := r.pollHttp(componentName, url)
@@ -36,7 +57,7 @@ func (r *HttpWait) Call(componentName string, resolver dit.ValueResolver) error 
 	}
 }
 
-func (r *HttpWait) pollHttp(componentName string, url string) error {
+func (r *httpWait) pollHttp(componentName string, url string) error {
 
 	logger := r.GetLogger(componentName)
 	logger.Println("Waiting for http", url)
@@ -47,9 +68,9 @@ func (r *HttpWait) pollHttp(componentName string, url string) error {
 	return r.Poll(componentName, f)
 }
 
-func (r *HttpWait) getRequest(url string) error {
+func (r *httpWait) getRequest(url string) error {
 	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-	req, err := http.NewRequest(r.getMethod(), url, nil)
+	req, err := http.NewRequest(r.method, url, nil)
 	if err != nil {
 		return err
 	}
@@ -65,13 +86,5 @@ func (r *HttpWait) getRequest(url string) error {
 		return nil
 	} else {
 		return fmt.Errorf("server %s returned status: %v", url, resp.Status)
-	}
-}
-
-func (r *HttpWait) getMethod() string {
-	if r.Method == "" {
-		return DefaultMethod
-	} else {
-		return r.Method
 	}
 }

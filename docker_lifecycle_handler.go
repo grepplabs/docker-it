@@ -34,7 +34,7 @@ func (r *dockerLifecycleHandler) Create(container *dockerContainer) error {
 	if exists, err := r.containerExists(container.containerID); err != nil {
 		return err
 	} else if exists {
-		r.context.logger.Info.Println("Component", container.Name, "already exists, container", container.containerID)
+		r.context.logger.Info.Println("Component", container.Name, "already exists, container", TruncateID(container.containerID))
 		return nil
 	}
 
@@ -45,7 +45,7 @@ func (r *dockerLifecycleHandler) Create(container *dockerContainer) error {
 	if err := r.createDockerContainer(container); err != nil {
 		return err
 	}
-	r.context.logger.Info.Println("Created new container", container.containerID, "for", container.Name)
+	r.context.logger.Info.Println("Created new container", TruncateID(container.containerID), "for", container.Name)
 
 	return nil
 }
@@ -61,7 +61,7 @@ func (r *dockerLifecycleHandler) Start(container *dockerContainer) error {
 	if running, err := r.isContainerRunning(container.containerID); err != nil {
 		return err
 	} else if running {
-		r.context.logger.Info.Println("Component", container.Name, "is already running", container.containerID)
+		r.context.logger.Info.Println("Component", container.Name, "is already running", TruncateID(container.containerID))
 		return nil
 	}
 
@@ -70,7 +70,7 @@ func (r *dockerLifecycleHandler) Start(container *dockerContainer) error {
 			return err
 		}
 	}
-	r.context.logger.Info.Println("Starting container", container.containerID, "for", container.Name)
+	r.context.logger.Info.Println("Starting container", TruncateID(container.containerID), "for", container.Name)
 	if err := r.dockerClient.StartContainer(container.containerID); err != nil {
 		// try to fetch logs from container
 		out := stdoutWriter(container.Name)
@@ -127,7 +127,7 @@ func (r *dockerLifecycleHandler) Destroy(container *dockerContainer) error {
 		r.Stop(container)
 	}
 
-	r.context.logger.Info.Println("Remove container", container.containerID)
+	r.context.logger.Info.Println("Remove container", TruncateID(container.containerID))
 	if err := r.dockerClient.RemoveContainer(container.containerID); err != nil {
 		return err
 	}
@@ -259,13 +259,13 @@ func (r *dockerLifecycleHandler) followLogs(container *dockerContainer, dstout, 
 	if err != nil {
 		return err
 	}
-	r.context.logger.Info.Println("Start follow logs", container.containerID)
+	r.context.logger.Info.Println("Start follow logs", TruncateID(container.containerID))
 	go func() {
 		defer followClient.Close()
 		for {
 			select {
 			case <-container.stopFollowLogsChannel:
-				r.context.logger.Info.Println("Received stop follow logs", container.containerID)
+				r.context.logger.Info.Println("Received stop follow logs", TruncateID(container.containerID))
 				return
 			}
 		}

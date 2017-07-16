@@ -23,6 +23,7 @@ func newDockerEnvironmentContext() (*dockerEnvironmentContext, error) {
 	logger := newLogger()
 	logger.Info.Println("Using IP", externalIP)
 	id := uuid.New().String()
+	id = id[len(id)-12:]
 
 	return &dockerEnvironmentContext{ID: id, logger: logger, externalIP: externalIP, containers: make(map[string]*dockerContainer)}, nil
 }

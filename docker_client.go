@@ -6,6 +6,7 @@ import (
 	typesContainer "github.com/docker/docker/api/types/container"
 	typesFilters "github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stringid"
 	"github.com/docker/go-connections/nat"
 	"io"
 	"io/ioutil"
@@ -125,4 +126,8 @@ func (r *dockerClient) StopContainer(containerID string) error {
 func (r *dockerClient) RemoveContainer(containerID string) error {
 	options := types.ContainerRemoveOptions{RemoveVolumes: true, Force: true}
 	return r.client.ContainerRemove(context.Background(), containerID, options)
+}
+
+func TruncateID(id string) string {
+	return stringid.TruncateID(id)
 }

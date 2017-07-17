@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultAtMost = 15 * time.Second
+	DefaultAtMost = 60 * time.Second
 	DefaultDelay  = time.Second
 )
 

@@ -98,7 +98,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			AfterStart: mysql.NewMySQLWait(
 				`root:mypassword@tcp({{ value . "it-mysql.Host"}}:{{ value . "it-mysql.Port"}})/`,
 				mysql.Options{
-					WaitOptions: wait.Options{AtMost: 60 * time.Second},
+					WaitOptions: wait.Options{AtMost: 180 * time.Second},
 				},
 			),
 		},
@@ -123,7 +123,9 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			},
 			AfterStart: kafka.NewKafkaWait(
 				`{{ value . "it-kafka.Host"}}:{{ value . "it-kafka.Port"}}`,
-				kafka.Options{},
+				kafka.Options{
+					WaitOptions: wait.Options{AtMost: 120 * time.Second},
+				},
 			),
 		},
 		dit.DockerComponent{

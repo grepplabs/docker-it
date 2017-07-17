@@ -1,0 +1,19 @@
+sudo: false
+
+language: go
+
+go:
+  - 1.8.x
+  - tip
+
+services:
+  - docker
+
+install:
+  - go get github.com/Masterminds/glide
+
+script:
+  - glide install -v
+  - go build .
+  - go test -v .
+  - go test -v ./test-examples/...

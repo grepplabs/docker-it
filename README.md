@@ -1,6 +1,7 @@
 # docker-it
-***Work in progress***
+[![Build Status](https://travis-ci.org/cloud-42/docker-it.svg?branch=master)](https://travis-ci.org/cloud-42/docker-it)
 
+***Work in progress***
 
 
 ## Compile - https://github.com/moby/moby/issues/28269

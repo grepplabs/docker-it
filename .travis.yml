@@ -11,10 +11,18 @@ services:
 
 before_install:
   - go get github.com/Masterminds/glide
+  - go get code.google.com/p/go.tools/cmd/cover
+  - go get github.com/modocache/gover
+  - go get github.com/mattn/goveralls
 
 install:
   - glide install -v
 
 script:
   - go build .
-  - go list -f '{{if len .TestGoFiles}}"go test -v {{.ImportPath}}"{{end}}' $(go list ./... | grep -v /vendor/) | xargs -i sh -c {}
+  # execute all tests
+  - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(go list ./... | grep -v /vendor/) | xargs -i sh -c {}
+  # coverage of the main package
+  - go test -coverprofile=.coverprofile .
+  - gover
+  - goveralls -coverprofile=gover.coverprofile -service travis-ci

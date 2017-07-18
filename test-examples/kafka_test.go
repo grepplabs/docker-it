@@ -2,9 +2,9 @@ package test_examples
 
 import (
 	"fmt"
+	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"github.com/Shopify/sarama"
 )
 
 func TestKafkaCall(t *testing.T) {
@@ -36,6 +36,3 @@ func TestKafkaCall(t *testing.T) {
 	fmt.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n", topic, partition, offset)
 
 }
-
-
-

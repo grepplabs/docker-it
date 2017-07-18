@@ -9,11 +9,12 @@ go:
 services:
   - docker
 
-install:
+before_install:
   - go get github.com/Masterminds/glide
 
-script:
+install:
   - glide install -v
+
+script:
   - go build .
-  - go test -v .
-  - go test -v ./test-examples/...
+  - go list -f '{{if len .TestGoFiles}}"go test -v {{.ImportPath}}"{{end}}' $(go list ./... | grep -v /vendor/) | xargs -i sh -c {}

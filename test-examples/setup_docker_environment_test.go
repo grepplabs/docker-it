@@ -146,8 +146,8 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 				`http://{{ value . "it-es.Host"}}:{{ value . "it-es.Port"}}/`,
 				elastic.Options{
 					WaitOptions: wait.Options{AtMost: 60 * time.Second},
-					Username: "elastic",
-					Password: "changeme",
+					Username:    "elastic",
+					Password:    "changeme",
 				},
 			),
 		},

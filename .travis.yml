@@ -20,7 +20,7 @@ install:
 script:
   - go build .
   # execute all tests
-  - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' $(go list ./... | grep -v /vendor/) | xargs -i sh -c {}
+  - go list -f '{{if len .TestGoFiles}}"go test -v {{.ImportPath}}"{{end}}' $(go list ./... | grep -v /vendor/) | xargs -i sh -c {}
   # coverage of the main package
   - go test -coverprofile=.coverprofile .
   - gover

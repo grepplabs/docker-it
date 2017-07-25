@@ -8,7 +8,6 @@ type DockerComponent struct {
 	ExposedPorts            []Port
 	EnvironmentVariables    map[string]string
 	FollowLogs              bool
-	BeforeStart             Callback
 	AfterStart              Callback
 }
 
@@ -19,7 +18,7 @@ type Callback interface {
 type ValueResolver interface {
 	Resolve(template string) (string, error)
 	Host() string
-	Port(componentName string, portName string) (string, error)
+	Port(componentName string, portName string) (int, error)
 }
 
 type Port struct {

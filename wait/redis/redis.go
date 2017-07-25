@@ -39,10 +39,10 @@ func (r *redisWait) Call(componentName string, resolver dit.ValueResolver) error
 	}
 }
 
-func (r *redisWait) pollRedis(componentName string, host string, port string) error {
+func (r *redisWait) pollRedis(componentName string, host string, port int) error {
 
 	logger := r.GetLogger(componentName)
-	logger.Println("Waiting for redis", fmt.Sprintf("%s:%s", host, port))
+	logger.Println("Waiting for redis", fmt.Sprintf("%s:%d", host, port))
 
 	f := func() error {
 		return r.ping(host, port)
@@ -50,8 +50,8 @@ func (r *redisWait) pollRedis(componentName string, host string, port string) er
 	return r.Poll(componentName, f)
 }
 
-func (r *redisWait) ping(host string, port string) error {
-	conn, err := redis.Dial("tcp", fmt.Sprintf("%s:%s", host, port),
+func (r *redisWait) ping(host string, port int) error {
+	conn, err := redis.Dial("tcp", fmt.Sprintf("%s:%d", host, port),
 		redis.DialConnectTimeout(time.Second), redis.DialReadTimeout(time.Second), redis.DialWriteTimeout(time.Second))
 	if err != nil {
 		return err

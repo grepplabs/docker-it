@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -78,8 +79,12 @@ func (r *dockerEnvironmentContext) Host() string {
 }
 
 // implements ValueResolver
-func (r *dockerEnvironmentContext) Port(componentName string, portName string) (string, error) {
-	return r.getValueResolver().Port(componentName, portName)
+func (r *dockerEnvironmentContext) Port(componentName string, portName string) (int, error) {
+	if val, err := r.getValueResolver().Port(componentName, portName); err != nil {
+		return 0, err
+	} else {
+		return strconv.Atoi(val)
+	}
 }
 
 // https://play.golang.org/p/BDt3qEQ_2H

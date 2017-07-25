@@ -12,3 +12,12 @@ $ glide install -v                        # Install packages and dependencies + 
 $ go build                                # Go tools work normally
 $ glide up                                # Update to newest versions of the package
 ```
+
+
+### Tasks 
+
+* [ ] add unit tests
+* [ ] add wait tests
+* [ ] document usage
+* [ ] evaluate sprig as template functions for Go templates
+

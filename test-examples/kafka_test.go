@@ -14,7 +14,7 @@ func TestKafkaCall(t *testing.T) {
 	port, err := dockerEnvironment.Port("it-kafka", "")
 	a.Nil(err)
 
-	broker := fmt.Sprintf("%s:%s", host, port)
+	broker := fmt.Sprintf("%s:%d", host, port)
 
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll

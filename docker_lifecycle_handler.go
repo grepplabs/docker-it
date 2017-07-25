@@ -65,11 +65,6 @@ func (r *dockerLifecycleHandler) Start(container *dockerContainer) error {
 		return nil
 	}
 
-	if container.BeforeStart != nil {
-		if err := container.BeforeStart.Call(container.Name, r.context); err != nil {
-			return err
-		}
-	}
 	r.context.logger.Info.Println("Starting container", TruncateID(container.containerID), "for", container.Name)
 	if err := r.dockerClient.StartContainer(container.containerID); err != nil {
 		// try to fetch logs from container

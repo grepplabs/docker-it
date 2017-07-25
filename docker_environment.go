@@ -124,7 +124,7 @@ func (r *DockerEnvironment) Resolve(template string) (string, error) {
 func (r *DockerEnvironment) Host() string {
 	return r.context.Host()
 }
-func (r *DockerEnvironment) Port(componentName string, portName string) (string, error) {
+func (r *DockerEnvironment) Port(componentName string, portName string) (int, error) {
 	return r.context.Port(componentName, portName)
 }
 

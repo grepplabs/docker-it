@@ -9,6 +9,11 @@ go:
 services:
   - docker
 
+notifications:
+  email:
+    on_success: never
+    on_failure: always
+
 before_install:
   - go get github.com/Masterminds/glide
   - go get github.com/modocache/gover

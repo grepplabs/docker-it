@@ -16,7 +16,7 @@ func TestElasticCall(t *testing.T) {
 	port, err := dockerEnvironment.Port("it-es", "")
 	a.Nil(err)
 
-	url := fmt.Sprintf("http://%s:%s", host, port)
+	url := fmt.Sprintf("http://%s:%d", host, port)
 	// https://www.elastic.co/guide/en/x-pack/current/security-getting-started.html
 	client, err := elastic.NewSimpleClient(elastic.SetURL(url), elastic.SetBasicAuth("elastic", "changeme"))
 	a.Nil(err)

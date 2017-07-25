@@ -15,7 +15,7 @@ func TestMySQLCall(t *testing.T) {
 	port, err := dockerEnvironment.Port("it-mysql", "")
 	a.Nil(err)
 
-	url := fmt.Sprintf("root:mypassword@tcp(%s:%s)/", host, port)
+	url := fmt.Sprintf("root:mypassword@tcp(%s:%d)/", host, port)
 
 	db, err := sql.Open("mysql", url)
 	a.Nil(err)

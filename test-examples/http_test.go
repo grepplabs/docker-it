@@ -17,7 +17,7 @@ func TestHttpCall(t *testing.T) {
 	port, err := dockerEnvironment.Port("it-http", "")
 	a.Nil(err)
 
-	url := fmt.Sprintf("http://%s:%s/__admin/requests", host, port)
+	url := fmt.Sprintf("http://%s:%d/__admin/requests", host, port)
 	fmt.Println(url)
 
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)

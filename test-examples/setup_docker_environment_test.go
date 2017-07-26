@@ -14,10 +14,12 @@ import (
 	"time"
 )
 
-var dockerEnvironment *dit.DockerEnvironment
+var dockerEnvironment,dockerEnvironment2 *dit.DockerEnvironment
 
 func init() {
 	dockerEnvironment = newDockerEnvironment()
+	dockerEnvironment2 = newDockerEnvironment2()
+
 }
 
 func TestMain(m *testing.M) {
@@ -34,8 +36,15 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
+	if err := dockerEnvironment2.Start("it-redis2"); err != nil {
+		dockerEnvironment2.Shutdown()
+		panic(err)
+	}
+
 	code := m.Run()
 	dockerEnvironment.Shutdown()
+	dockerEnvironment2.Shutdown()
+
 	os.Exit(code)
 }
 
@@ -150,6 +159,28 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					Password:    "changeme",
 				},
 			),
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+	return env
+}
+
+func newDockerEnvironment2() *dit.DockerEnvironment {
+
+	env, err := dit.NewDockerEnvironment(
+		dit.DockerComponent{
+			Name:       "it-redis2",
+			Image:      "redis",
+			ForcePull:  false,
+			FollowLogs: false,
+			ExposedPorts: []dit.Port{
+				{
+					ContainerPort: 6379,
+				},
+			},
+			AfterStart: redis.NewRedisWait(redis.Options{}),
 		},
 	)
 	if err != nil {

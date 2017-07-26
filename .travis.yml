@@ -25,8 +25,6 @@ install:
 script:
   - go build .
   # execute all tests
-  - go list -f '{{if len .TestGoFiles}}"go test -v {{.ImportPath}}"{{end}}' $(go list ./... | grep -v /vendor/) | xargs -i sh -c {}
-  # coverage of the main package
-  - go test -coverprofile=.coverprofile .
+  - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile -v {{.ImportPath}}"{{end}}' $(go list ./... | grep -v /vendor/) | xargs -i sh -c {}
   - gover
   - goveralls -coverprofile=gover.coverprofile -service travis-ci

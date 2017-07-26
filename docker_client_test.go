@@ -47,34 +47,40 @@ func TestDockerCommands(t *testing.T) {
 	containerName := fmt.Sprintf("test-busybox-%s", salt)
 
 	env := []string{}
-	id, err := dc.CreateContainer(containerName, testImage, env, portSpecs)
+	containerID, err := dc.CreateContainer(containerName, testImage, env, portSpecs)
 	a.Nil(err)
 
-	_, err = dc.GetContainerByID(id)
+	_, err = dc.GetContainerByID(containerID)
 	a.Nil(err)
 
-	_, err = dc.GetContainerByID(TruncateID(id))
+	_, err = dc.GetContainerByID(TruncateID(containerID))
 	a.Nil(err)
 
-	err = dc.StartContainer(id)
+	err = dc.StartContainer(containerID)
 	a.Nil(err)
 
-	reader, err := dc.ContainerLogs(id,false)
-	a.Nil(err)
-	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, reader)
-
-
-	err = dc.StopContainer(id)
+	err = dc.StartContainer(containerID)
 	a.Nil(err)
 
-	reader, err = dc.ContainerLogs(id,false)
+	reader, err := dc.ContainerLogs(containerID,false)
 	a.Nil(err)
 	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, reader)
 
-	err = dc.RemoveContainer(id)
+
+	err = dc.StopContainer(containerID)
 	a.Nil(err)
 
-	_, err = dc.ContainerLogs(id,false)
+	err = dc.StopContainer(containerID)
+	a.Nil(err)
+
+	reader, err = dc.ContainerLogs(containerID,false)
+	a.Nil(err)
+	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, reader)
+
+	err = dc.RemoveContainer(containerID)
+	a.Nil(err)
+
+	_, err = dc.ContainerLogs(containerID,false)
 	a.NotNil(err)
 
 	err = dc.RemoveImageByName(testImage)

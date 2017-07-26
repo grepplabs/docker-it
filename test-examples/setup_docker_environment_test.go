@@ -45,7 +45,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			Name:       "it-redis",
 			Image:      "redis",
 			ForcePull:  true,
-			FollowLogs: false,
+			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
 					ContainerPort: 6379,
@@ -57,7 +57,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			Name:       "it-http",
 			Image:      "rodolpheche/wiremock",
 			ForcePull:  true,
-			FollowLogs: false,
+			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
 					ContainerPort: 8080,

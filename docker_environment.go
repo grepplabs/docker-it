@@ -167,5 +167,6 @@ func (r *DockerEnvironment) Shutdown(beforeShutdown ...func()) {
 				r.context.logger.Error.Println("Destroy component error", err)
 			}
 		}
+		r.lifecycleHandler.Close()
 	})
 }

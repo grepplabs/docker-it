@@ -1,6 +1,8 @@
 # docker-it
 [![Build Status](https://travis-ci.org/cloud-42/docker-it.svg?branch=master)](https://travis-ci.org/cloud-42/docker-it)
 [![Coverage Status](https://coveralls.io/repos/github/cloud-42/docker-it/badge.svg?branch=master)](https://coveralls.io/github/cloud-42/docker-it?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cloud-42/docker-it)](https://goreportcard.com/report/github.com/cloud-42/docker-it)
+
 ***Work in progress***
 
 

@@ -102,31 +102,3 @@ func TestNewDockerEnvironmentWithShutdown(t *testing.T) {
 	}
 	a.Equal(uint32(1), atomic.LoadUint32(&counter))
 }
-
-func TestNewDockerEnvironmentShutdownIsNonBlocking(t *testing.T) {
-	a := assert.New(t)
-
-	env, err := NewDockerEnvironment(
-		DockerComponent{
-			Name:       "it-busybox",
-			Image:      "busybox",
-			ForcePull:  true,
-			FollowLogs: true,
-		},
-	)
-	var counter uint32
-	env.WithShutdown(func() {
-		atomic.AddUint32(&counter, 1)
-	})
-
-	err = env.Start("it-busybox")
-	a.Nil(err)
-
-	syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-
-	// doneChannel is not used
-	select {
-	case <-time.After(time.Second * 3):
-	}
-	a.Equal(uint32(1), atomic.LoadUint32(&counter))
-}

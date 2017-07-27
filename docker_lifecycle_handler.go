@@ -102,7 +102,7 @@ func (r *dockerLifecycleHandler) Stop(container *dockerContainer) error {
 }
 
 func (r *dockerLifecycleHandler) Destroy(container *dockerContainer) error {
-	r.context.logger.Info.Println("Destroy component", container.Name)
+	r.context.logger.Info.Println("Destroy component", container.Name, "container", TruncateID(container.containerID))
 
 	container.StopFollowLogs()
 
@@ -126,6 +126,7 @@ func (r *dockerLifecycleHandler) Destroy(container *dockerContainer) error {
 	if err := r.dockerClient.RemoveContainer(container.containerID); err != nil {
 		return err
 	}
+	container.containerID = ""
 
 	if container.RemoveImageAfterDestroy {
 		r.context.logger.Info.Println("Remove image", container.Image)
@@ -225,14 +226,6 @@ func (r *dockerLifecycleHandler) getContainerName(name string) string {
 		containerName = name
 	}
 	return normalizeName(containerName)
-}
-
-func (r *dockerLifecycleHandler) getNetworkName() string {
-	networkName := "docker-environment"
-	if r.context.ID != "" {
-		networkName += "-" + r.context.ID
-	}
-	return networkName
 }
 
 func (r *dockerLifecycleHandler) fetchLogs(containerID string, dstout, dsterr io.Writer) error {

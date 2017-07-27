@@ -1,7 +1,6 @@
 # docker-it
 [![Build Status](https://travis-ci.org/cloud-42/docker-it.svg?branch=master)](https://travis-ci.org/cloud-42/docker-it)
-[![Coverage Status](https://coveralls.io/repos/cloud-42/docker-it/badge.svg?branch=master&service=github)](https://coveralls.io/r/cloud-42/docker-it?branch=master)
-
+[![Coverage Status](https://coveralls.io/repos/github/cloud-42/docker-it/badge.svg?branch=master)](https://coveralls.io/github/cloud-42/docker-it?branch=master)
 ***Work in progress***
 
 

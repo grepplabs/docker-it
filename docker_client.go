@@ -79,7 +79,7 @@ func (r *dockerClient) RemoveImageByName(imageName string) error {
 }
 
 func (r *dockerClient) RemoveImage(imageID string) error {
-	options := types.ImageRemoveOptions{}
+	options := types.ImageRemoveOptions{Force: true}
 	_, err := r.client.ImageRemove(context.Background(), imageID, options)
 	return err
 

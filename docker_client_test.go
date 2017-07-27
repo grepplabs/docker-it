@@ -11,7 +11,9 @@ import (
 	"testing"
 )
 
-const testImage = "busybox"
+const (
+	testImage = "busybox"
+)
 
 func TestDockerCommands(t *testing.T) {
 	a := assert.New(t)
@@ -49,11 +51,13 @@ func TestDockerCommands(t *testing.T) {
 	containerID, err := dc.CreateContainer(containerName, testImage, env, portSpecs)
 	a.Nil(err)
 
-	_, err = dc.GetContainerByID(containerID)
+	container, err := dc.GetContainerByID(containerID)
 	a.Nil(err)
+	a.NotNil(container)
 
-	_, err = dc.GetContainerByID(TruncateID(containerID))
+	container, err = dc.GetContainerByID("unknown-id")
 	a.Nil(err)
+	a.Nil(container)
 
 	err = dc.StartContainer(containerID)
 	a.Nil(err)

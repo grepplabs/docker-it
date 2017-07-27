@@ -39,8 +39,31 @@ func TestExposedPortContainerPortMustBeProvided(t *testing.T) {
 	}
 
 	_, err = binder.getNormalizedExposedPorts()
-	a.True(err != nil)
-	a.Equal(`DockerComponent 'redis' ContainerPort '0' is invalid`, err.Error())
+	a.EqualError(err, `DockerComponent 'redis' ContainerPort '0' is invalid`)
+}
+
+func TestExposedPortConfiguredTwice(t *testing.T) {
+	a := assert.New(t)
+
+	environmentContext, err := newDockerEnvironmentContext()
+	a.Nil(err)
+
+	binder := newDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
+
+	container, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
+	a.Nil(err)
+	container.ExposedPorts = []Port{
+		{
+			Name:          "redis",
+			ContainerPort: 6379,
+		},
+		{
+			Name:          "redis",
+			ContainerPort: 6379,
+		},
+	}
+	_, err = binder.getNormalizedExposedPorts()
+	a.EqualError(err, `DockerComponent 'redis' port name 'redis' is configured twice`)
 }
 
 func TestGetNormalizedExposedPorts(t *testing.T) {

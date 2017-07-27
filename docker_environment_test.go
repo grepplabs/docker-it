@@ -4,6 +4,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sync/atomic"
 	"testing"
+	"time"
+	"syscall"
 )
 
 func TestNewDockerEnvironmentFailsWhenComponentListIsEmpty(t *testing.T) {
@@ -40,9 +42,15 @@ func TestNewDockerEnvironmentLifeCycle(t *testing.T) {
 			Name:       "it-busybox",
 			Image:      "busybox",
 			ForcePull:  true,
-			FollowLogs: false,
+			FollowLogs: true,
 		},
 	)
+	a.Nil(err)
+
+	err = env.Start("it-busybox")
+	a.Nil(err)
+
+	err = env.Stop("it-busybox")
 	a.Nil(err)
 
 	err = env.Start("it-busybox")
@@ -65,4 +73,32 @@ func TestNewDockerEnvironmentLifeCycle(t *testing.T) {
 	// shutdown is invoked only once
 	a.Equal(uint32(1), atomic.LoadUint32(&counter))
 
+}
+
+func TestNewDockerEnvironmentWithShutdown(t *testing.T) {
+	a := assert.New(t)
+
+	env, err := NewDockerEnvironment(
+		DockerComponent{
+			Name:       "it-busybox",
+			Image:      "busybox",
+			ForcePull:  true,
+			FollowLogs: true,
+		},
+	)
+	var counter uint32
+	doneChannel := env.WithShutdown(func() {
+		atomic.AddUint32(&counter, 1)
+	})
+
+	err = env.Start("it-busybox")
+	a.Nil(err)
+
+	syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+
+	select {
+	case <- doneChannel:
+	case <- time.After(time.Second * 3):
+	}
+	a.Equal(uint32(1), atomic.LoadUint32(&counter))
 }

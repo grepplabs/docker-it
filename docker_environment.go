@@ -52,12 +52,15 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 }
 
 func (r *DockerEnvironment) Start(names ...string) error {
+	if (len(names)) == 0 {
+		return errors.New("No component was provided to start")
+	}
 	return r.forEach(r.lifecycleHandler.Start, names...)
 }
 
 func (r *DockerEnvironment) StartParallel(names ...string) error {
 	if (len(names)) == 0 {
-		return errors.New("No component was provided")
+		return errors.New("No component was provided to start in parallel")
 	}
 
 	r.context.logger.Info.Println("Starting components in parallel", names)

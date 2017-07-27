@@ -14,11 +14,7 @@ import (
 	"time"
 )
 
-const (
-	DEFAULT_DOCKER_API_VERSION = "1.23"
-)
-
-var dockerEnvironment,dockerEnvironment2 *dit.DockerEnvironment
+var dockerEnvironment, dockerEnvironment2 *dit.DockerEnvironment
 
 func init() {
 	// ensure docker API version

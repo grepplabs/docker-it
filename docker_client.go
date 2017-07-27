@@ -21,7 +21,7 @@ type dockerClient struct {
 	client *client.Client
 }
 
-func SetDefaultDockerApiVersion()  {
+func SetDefaultDockerApiVersion() {
 	// ensure docker API version
 	if os.Getenv("DOCKER_API_VERSION") == "" {
 		os.Setenv("DOCKER_API_VERSION", DEFAULT_DOCKER_API_VERSION)

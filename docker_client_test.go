@@ -2,21 +2,19 @@ package dockerit
 
 import (
 	"fmt"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"strconv"
 	"testing"
-	"github.com/docker/docker/pkg/stdcopy"
-	"os"
 )
 
-const testImage  = "busybox"
+const testImage = "busybox"
 
 func TestDockerCommands(t *testing.T) {
 	a := assert.New(t)
-
-	SetDefaultDockerApiVersion()
 
 	dc, err := NewDockerClient()
 	a.Nil(err)
@@ -63,25 +61,24 @@ func TestDockerCommands(t *testing.T) {
 	err = dc.StartContainer(containerID)
 	a.Nil(err)
 
-	reader, err := dc.ContainerLogs(containerID,false)
+	reader, err := dc.ContainerLogs(containerID, false)
 	a.Nil(err)
 	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, reader)
 
-
 	err = dc.StopContainer(containerID)
 	a.Nil(err)
 
 	err = dc.StopContainer(containerID)
 	a.Nil(err)
 
-	reader, err = dc.ContainerLogs(containerID,false)
+	reader, err = dc.ContainerLogs(containerID, false)
 	a.Nil(err)
 	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, reader)
 
 	err = dc.RemoveContainer(containerID)
 	a.Nil(err)
 
-	_, err = dc.ContainerLogs(containerID,false)
+	_, err = dc.ContainerLogs(containerID, false)
 	a.NotNil(err)
 
 	err = dc.RemoveImageByName(testImage)

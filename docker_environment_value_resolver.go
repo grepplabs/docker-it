@@ -130,12 +130,6 @@ func (r *dockerEnvironmentValueResolver) appendContainerContextVariables(name st
 
 	// original names (no lowercase)
 	for _, exposedPorts := range container.DockerComponent.ExposedPorts {
-		if exposedPorts.Name == "" || normalizeName(exposedPorts.Name) == normalizeName(name) {
-			result[fmt.Sprintf("%s.%s", name, qualifierPort)] = result[fmt.Sprintf("%s.%s", name, qualifierPort)]
-			result[fmt.Sprintf("%s.%s", name, qualifierHostPort)] = result[fmt.Sprintf("%s.%s", name, qualifierHostPort)]
-			result[fmt.Sprintf("%s.%s", name, qualifierContainerPort)] = result[fmt.Sprintf("%s.%s", name, qualifierContainerPort)]
-			result[fmt.Sprintf("%s.%s", name, qualifierTargetPort)] = result[fmt.Sprintf("%s.%s", name, qualifierTargetPort)]
-		}
 		if exposedPorts.Name != "" {
 			result[fmt.Sprintf("%s.%s.%s", name, exposedPorts.Name, qualifierPort)] = result[fmt.Sprintf("%s.%s.%s", name, normalizeName(exposedPorts.Name), qualifierPort)]
 			result[fmt.Sprintf("%s.%s.%s", name, exposedPorts.Name, qualifierHostPort)] = result[fmt.Sprintf("%s.%s.%s", name, normalizeName(exposedPorts.Name), qualifierHostPort)]

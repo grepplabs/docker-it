@@ -33,7 +33,7 @@ func (r *redisWait) Call(componentName string, resolver dit.ValueResolver) error
 		host := resolver.Host()
 		err := r.pollRedis(componentName, host, port)
 		if err != nil {
-			return fmt.Errorf("redis wait: failed to connect to %s:%s: %v ", host, port, err)
+			return fmt.Errorf("redis wait: failed to connect to %s:%d: %v ", host, port, err)
 		}
 		return nil
 	}

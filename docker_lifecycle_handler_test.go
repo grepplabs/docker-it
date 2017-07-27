@@ -33,6 +33,11 @@ func TestDockerLifecycleHandler(t *testing.T) {
 	a.Nil(err)
 	a.NotEmpty(container.containerID)
 
+	// next create has no effect
+	err = handler.Create(container)
+	a.Nil(err)
+	a.Equal(containerId1, container.containerID)
+
 	err = handler.checkOrPullDockerImage(testImage, false)
 	a.Nil(err)
 
@@ -51,6 +56,10 @@ func TestDockerLifecycleHandler(t *testing.T) {
 	a.Nil(err)
 	a.True(running)
 
+	// next start has no effect
+	err = handler.Start(container)
+	a.Nil(err)
+
 	err = handler.fetchLogs(container.containerID, stdoutWriter(""), stdoutWriter(""))
 	a.Nil(err)
 
@@ -64,6 +73,10 @@ func TestDockerLifecycleHandler(t *testing.T) {
 	running, err = handler.isContainerRunning(container.containerID)
 	a.Nil(err)
 	a.False(running)
+
+	// next stop has no effect
+	err = handler.Stop(container)
+	a.Nil(err)
 
 	err = handler.Destroy(container)
 	a.Nil(err)
@@ -80,6 +93,10 @@ func TestDockerLifecycleHandler(t *testing.T) {
 	err = handler.checkOrPullDockerImage(testImage, true)
 	a.Nil(err)
 
+	err = handler.Destroy(container)
+	a.Nil(err)
+
+	// next destroy has no effect
 	err = handler.Destroy(container)
 	a.Nil(err)
 

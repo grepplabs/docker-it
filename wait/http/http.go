@@ -66,7 +66,9 @@ func (r *httpWait) pollHttp(componentName string, url string) error {
 }
 
 func (r *httpWait) getRequest(url string) error {
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
 	req, err := http.NewRequest(r.method, url, nil)
 	if err != nil {
 		return err

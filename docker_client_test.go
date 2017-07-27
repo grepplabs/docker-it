@@ -16,6 +16,8 @@ const testImage  = "busybox"
 func TestDockerCommands(t *testing.T) {
 	a := assert.New(t)
 
+	SetDefaultDockerApiVersion()
+
 	dc, err := NewDockerClient()
 	a.Nil(err)
 
@@ -30,7 +32,6 @@ func TestDockerCommands(t *testing.T) {
 	a.Nil(err)
 
 	err = dc.PullImage("this_image_does_not_exist")
-	a.NotNil(err)
 
 	exposedPorts := make(nat.PortSet)
 	port, err := nat.NewPort("tcp", strconv.Itoa(4771))

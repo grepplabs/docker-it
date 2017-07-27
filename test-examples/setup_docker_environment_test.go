@@ -14,9 +14,16 @@ import (
 	"time"
 )
 
+const (
+	DEFAULT_DOCKER_API_VERSION = "1.23"
+)
+
 var dockerEnvironment,dockerEnvironment2 *dit.DockerEnvironment
 
 func init() {
+	// ensure docker API version
+	dit.SetDefaultDockerApiVersion()
+
 	dockerEnvironment = newDockerEnvironment()
 	dockerEnvironment2 = newDockerEnvironment2()
 

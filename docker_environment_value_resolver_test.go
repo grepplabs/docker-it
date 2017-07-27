@@ -183,9 +183,11 @@ func TestResolveUsingContextVariables(t *testing.T) {
 	a.EqualError(err, "Port value resolver: component name is empty")
 
 	port, err := resolver.Port("redis", "")
+	a.Nil(err)
 	a.Equal(32401, port)
 
 	port, err = resolver.Port("redis", "sentinel")
+	a.Nil(err)
 	a.Equal(32402, port)
 }
 

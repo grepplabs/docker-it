@@ -20,7 +20,8 @@ func TestHttpCall(t *testing.T) {
 	url := fmt.Sprintf("http://%s:%d/__admin/requests", host, port)
 	fmt.Println(url)
 
-	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 	req, err := http.NewRequest("GET", url, nil)
 	a.Nil(err)
 

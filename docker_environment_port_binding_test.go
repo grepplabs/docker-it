@@ -19,7 +19,7 @@ func TestGetNormalizedExposedPortsWhenNoPortsAreExposed(t *testing.T) {
 
 	mapping, err := binder.getNormalizedExposedPorts()
 	a.Nil(err)
-	a.Equal(map[string][]Port{"redis": []Port{}}, mapping)
+	a.Equal(map[string][]Port{"redis": {}}, mapping)
 }
 
 func TestExposedPortContainerPortMustBeProvided(t *testing.T) {
@@ -98,7 +98,7 @@ func TestGetNormalizedExposedPorts(t *testing.T) {
 
 	mapping, err := binder.getNormalizedExposedPorts()
 	a.Nil(err)
-	a.Equal(map[string][]Port{"myapp": []Port{
+	a.Equal(map[string][]Port{"myapp": {
 		{
 			Name:          "myapp",
 			ContainerPort: 8080,
@@ -153,7 +153,7 @@ func TestGetNormalizedExposedPortsFailsWhenPortNameUsedTwice(t *testing.T) {
 
 func TestPortBindings(t *testing.T) {
 	a := assert.New(t)
-	componentPorts := map[string][]Port{"myapp": []Port{
+	componentPorts := map[string][]Port{"myapp": {
 		{
 			Name:          "myapp",
 			ContainerPort: 8080,
@@ -204,7 +204,7 @@ func TestPortBindings(t *testing.T) {
 
 func TestPortBindingsFailsWhenHostPortConfiguredTwice(t *testing.T) {
 	a := assert.New(t)
-	componentPorts := map[string][]Port{"myapp": []Port{
+	componentPorts := map[string][]Port{"myapp": {
 		{
 			Name:          "port-1",
 			ContainerPort: 8082,
@@ -241,6 +241,7 @@ func TestConfigurePortBinding(t *testing.T) {
 
 	binder := newDockerEnvironmentPortBinding("0.0.0.0", environmentContext)
 	err = binder.configurePortBindings()
+	a.Nil(err)
 
 	binding1 := container1.portBindings
 	a.Equal(1, len(binding1))

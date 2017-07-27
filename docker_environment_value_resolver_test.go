@@ -178,6 +178,15 @@ func TestResolveUsingContextVariables(t *testing.T) {
 	value, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.sentinel.ContainerPort"}}`)
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:26379`, value)
+
+	_, err = resolver.Port("", "")
+	a.EqualError(err, "Port value resolver: component name is empty")
+
+	port, err := resolver.Port("redis", "")
+	a.Equal(32401, port)
+
+	port, err = resolver.Port("redis", "sentinel")
+	a.Equal(32402, port)
 }
 
 func TestResolveUsingSystemVariables(t *testing.T) {
@@ -257,6 +266,25 @@ func TestResolveReturnsErrorWhenVariableIsNotFound(t *testing.T) {
 	_, err = resolver.resolve(`redis://{{ value . "redis.Host"}}:{{ value . "redis.HostBad"}}`)
 	a.True(err != nil)
 	a.Contains(err.Error(), "Unknown key 'redis.HostBad'")
+}
+
+func TestResolveReturnsErrorWhenBadTemplate(t *testing.T) {
+	a := assert.New(t)
+
+	environmentContext, err := newDockerEnvironmentContext()
+	a.Nil(err)
+
+	container, err := environmentContext.addContainer(DockerComponent{Name: "redis", Image: "redis:latest"})
+	a.Nil(err)
+
+	container.portBindings = []Port{
+		{ContainerPort: 6379, HostPort: 32401},
+	}
+
+	resolver := &dockerEnvironmentValueResolver{ip: "192.168.178.44", context: environmentContext}
+
+	_, err = resolver.resolve(`redis://{{ value . "redis.Host"}`)
+	a.NotNil(err)
 }
 
 func TestConfigureContainersEnv(t *testing.T) {

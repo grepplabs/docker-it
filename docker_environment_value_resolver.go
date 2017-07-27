@@ -154,9 +154,9 @@ func (r *dockerEnvironmentValueResolver) getSystemContextVariables() map[string]
 	return result
 }
 
-func (r *dockerEnvironmentValueResolver) Port(componentName string, portName string) (string, error) {
+func (r *dockerEnvironmentValueResolver) Port(componentName string, portName string) (int, error) {
 	if componentName == "" {
-		return "", errors.New("Port value resolver: component name is empty")
+		return 0, errors.New("Port value resolver: component name is empty")
 	}
 
 	var tpl string
@@ -165,5 +165,10 @@ func (r *dockerEnvironmentValueResolver) Port(componentName string, portName str
 	} else {
 		tpl = fmt.Sprintf(`{{ value . "%s.%s.%s"}}`, normalizeName(componentName), normalizeName(portName), qualifierPort)
 	}
-	return r.resolve(tpl)
+
+	if val, err := r.resolve(tpl); err != nil {
+		return 0, err
+	} else {
+		return strconv.Atoi(val)
+	}
 }

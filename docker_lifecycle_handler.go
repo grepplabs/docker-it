@@ -141,53 +141,50 @@ func (r *dockerLifecycleHandler) isContainerRunning(containerID string) (bool, e
 	if containerID == "" {
 		return false, errors.New("isContainerRunning: containerID must not be empty")
 	}
-	if container, err := r.dockerClient.GetContainerByID(containerID); err != nil {
+	container, err := r.dockerClient.GetContainerByID(containerID)
+	if err != nil {
 		return false, err
-	} else {
-		if container != nil {
-			return strings.ToLower(container.State) == "running", nil
-		} else {
-			return false, fmt.Errorf("Container with ID %s does not exist", containerID)
-		}
 	}
+	if container != nil {
+		return strings.ToLower(container.State) == "running", nil
+	}
+	return false, fmt.Errorf("Container with ID %s does not exist", containerID)
+
 }
 
 func (r *dockerLifecycleHandler) containerExists(containerID string) (bool, error) {
 	if containerID != "" {
-		if container, err := r.dockerClient.GetContainerByID(containerID); err != nil {
+		container, err := r.dockerClient.GetContainerByID(containerID)
+		if err != nil {
 			return false, err
-		} else {
-			if container != nil {
-				return true, nil
-			}
+		}
+		if container != nil {
+			return true, nil
 		}
 	}
 	return false, nil
 }
 
 func (r *dockerLifecycleHandler) checkOrPullDockerImage(image string, forcePull bool) error {
-	var imageExists bool
-	if summary, err := r.dockerClient.GetImageByName(image); err != nil {
+	summary, err := r.dockerClient.GetImageByName(image)
+	if err != nil {
 		return err
-	} else {
-		imageExists = summary != nil
 	}
+	imageExists := summary != nil
 
 	if !forcePull {
 		if imageExists {
 			return nil
-		} else {
-			return fmt.Errorf("Local images %s does not exist", image)
 		}
+		return fmt.Errorf("Local images %s does not exist", image)
 	}
 	r.context.logger.Info.Println("Pulling image", image)
 	if err := r.dockerClient.PullImage(image); err != nil {
 		if imageExists {
 			r.context.logger.Info.Println("Image", image, "cannot be pulled, using existing one")
 			return nil
-		} else {
-			return err
 		}
+		return err
 	}
 	return nil
 }
@@ -210,12 +207,12 @@ func (r *dockerLifecycleHandler) createDockerContainer(container *dockerContaine
 		}
 	}
 	r.context.logger.Info.Println("Creating container for", container.Name, "name", containerName, "env", env, "portSpecs", portSpecs)
-	if containerID, err := r.dockerClient.CreateContainer(containerName, container.Image, env, portSpecs); err != nil {
+	containerID, err := r.dockerClient.CreateContainer(containerName, container.Image, env, portSpecs)
+	if err != nil {
 		return err
-	} else {
-		container.containerID = containerID
-		return nil
 	}
+	container.containerID = containerID
+	return nil
 }
 
 func (r *dockerLifecycleHandler) getContainerName(name string) string {

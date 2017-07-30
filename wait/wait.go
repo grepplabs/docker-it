@@ -43,9 +43,8 @@ func NewWait(options Options) Wait {
 func (r *Wait) GetLogger(componentName string) *log.Logger {
 	if r.logger != nil {
 		return r.logger
-	} else {
-		return log.New(os.Stdout, fmt.Sprintf("WAIT FOR %s: ", componentName), log.Ldate|log.Ltime)
 	}
+	return log.New(os.Stdout, fmt.Sprintf("WAIT FOR %s: ", componentName), log.Ldate|log.Ltime)
 }
 
 func (r *Wait) GetAtMost() time.Duration {

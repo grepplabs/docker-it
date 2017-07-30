@@ -27,16 +27,16 @@ func NewRedisWait(options Options) *redisWait {
 
 // implements dockerit.Callback
 func (r *redisWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if port, err := resolver.Port(componentName, r.portName); err != nil {
+	port, err := resolver.Port(componentName, r.portName)
+	if err != nil {
 		return err
-	} else {
-		host := resolver.Host()
-		err := r.pollRedis(componentName, host, port)
-		if err != nil {
-			return fmt.Errorf("redis wait: failed to connect to %s:%d: %v ", host, port, err)
-		}
-		return nil
 	}
+	host := resolver.Host()
+	err = r.pollRedis(componentName, host, port)
+	if err != nil {
+		return fmt.Errorf("redis wait: failed to connect to %s:%d: %v ", host, port, err)
+	}
+	return nil
 }
 
 func (r *redisWait) pollRedis(componentName string, host string, port int) error {

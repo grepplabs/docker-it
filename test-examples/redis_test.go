@@ -1,4 +1,4 @@
-package test_examples
+package testexamples
 
 import (
 	"fmt"

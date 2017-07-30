@@ -1,4 +1,4 @@
-package test_examples
+package testexamples
 
 import (
 	dit "github.com/cloud-42/docker-it"

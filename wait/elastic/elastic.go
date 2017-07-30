@@ -33,15 +33,15 @@ func NewElasticWait(urlTemplate string, options Options) *elasticWait {
 
 // implements dockerit.Callback
 func (r *elasticWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if url, err := resolver.Resolve(r.urlTemplate); err != nil {
+	url, err := resolver.Resolve(r.urlTemplate)
+	if err != nil {
 		return err
-	} else {
-		err := r.pollElastic(componentName, url)
-		if err != nil {
-			return fmt.Errorf("elastic wait: failed to connect to %s %v ", url, err)
-		}
-		return nil
 	}
+	err = r.pollElastic(componentName, url)
+	if err != nil {
+		return fmt.Errorf("elastic wait: failed to connect to %s %v ", url, err)
+	}
+	return nil
 }
 
 func (r *elasticWait) pollElastic(componentName string, url string) error {

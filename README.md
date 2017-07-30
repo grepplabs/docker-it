@@ -13,7 +13,8 @@ This utility library allows you to create a test environment based on docker con
 * Full control of the container lifecycle - you can stop and restart a container to test connectivity problems
 * Follow container log output
 * Define a wait for container application startup before your tests start
-
+* Use DOCKER_API_VERSION environment variable to set API version
+ 
 Prerequisites
 ========
 [Go 1.7 or higher](https://golang.org/doc/install)  
@@ -115,8 +116,8 @@ func TestWithDocker(t *testing.T) {
 }
 ```
 
-Command env.StartParallel("it-redis", "it-es") will start redis and elastic search in parallel.
-With AfterStart option you can define wait condition.
+Command `env.StartParallel("it-redis", "it-es")` will start redis and elastic search in parallel.
+With `AfterStart` option you can define wait condition.
 
 ```
 INFO: 2017/07/30 23:48:35 Using IP 192.168.178.20
@@ -161,13 +162,13 @@ INFO: 2017/07/30 23:48:47 Remove container 0fae9d0ac54a
 INFO: 2017/07/30 23:48:47 Closing docker lifecycle handler
 ```
 
-As it-redis component sets FollowLogs option, the logs from its container are logged with the component name as prefix
+As `it-redis` component sets `FollowLogs` option, the logs from its container are logged with the component name as prefix
 
 ```
 it-redis: 1:M 30 Jul 21:48:37.440 * Running mode=standalone, port=6379.
 ```
 
-When the tests are finished shutdown the test environment with env.Shutdown() and the test containers will be removed
+When the tests are finished shutdown the test environment with `env.Shutdown()` and the test containers will be removed
 
 ```
 INFO: 2017/07/30 23:48:45 Destroy component it-redis container c213214253e2

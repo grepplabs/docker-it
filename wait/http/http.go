@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	DefaultMethod = "GET"
+	defaultMethod = "GET"
 )
 
 type Options struct {
@@ -32,7 +32,7 @@ func NewHttpWait(urlTemplate string, options Options) *httpWait {
 
 	method := options.Method
 	if method == "" {
-		method = DefaultMethod
+		method = defaultMethod
 	}
 	return &httpWait{
 		Wait:        wait.NewWait(options.WaitOptions),
@@ -43,15 +43,15 @@ func NewHttpWait(urlTemplate string, options Options) *httpWait {
 
 // implements dockerit.Callback
 func (r *httpWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if url, err := resolver.Resolve(r.urlTemplate); err != nil {
+	url, err := resolver.Resolve(r.urlTemplate)
+	if err != nil {
 		return err
-	} else {
-		err := r.pollHttp(componentName, url)
-		if err != nil {
-			return fmt.Errorf("http wait: failed to connect to %s %v ", url, err)
-		}
-		return nil
 	}
+	err = r.pollHttp(componentName, url)
+	if err != nil {
+		return fmt.Errorf("http wait: failed to connect to %s %v ", url, err)
+	}
+	return nil
 }
 
 func (r *httpWait) pollHttp(componentName string, url string) error {
@@ -83,7 +83,6 @@ func (r *httpWait) getRequest(url string) error {
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return nil
-	} else {
-		return fmt.Errorf("server %s returned status: %v", url, resp.Status)
 	}
+	return fmt.Errorf("server %s returned status: %v", url, resp.Status)
 }

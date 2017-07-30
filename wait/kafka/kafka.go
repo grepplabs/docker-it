@@ -42,15 +42,15 @@ func NewKafkaWait(brokerAddrTemplate string, options Options) *kafkaWait {
 
 // implements dockerit.Callback
 func (r *kafkaWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if url, err := resolver.Resolve(r.brokerAddrTemplate); err != nil {
+	url, err := resolver.Resolve(r.brokerAddrTemplate)
+	if err != nil {
 		return err
-	} else {
-		err := r.pollKafka(componentName, url)
-		if err != nil {
-			return fmt.Errorf("kafka wait: failed to connect to %s %v ", url, err)
-		}
-		return nil
 	}
+	err = r.pollKafka(componentName, url)
+	if err != nil {
+		return fmt.Errorf("kafka wait: failed to connect to %s %v ", url, err)
+	}
+	return nil
 }
 
 func (r *kafkaWait) pollKafka(componentName string, url string) error {

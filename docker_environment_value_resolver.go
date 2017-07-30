@@ -31,11 +31,11 @@ func newDockerComponentValueResolver(ip string, context *dockerEnvironmentContex
 }
 
 func (r *dockerEnvironmentValueResolver) value(m map[string]interface{}, key string) (interface{}, error) {
-	if val, ok := m[key]; !ok {
+	val, ok := m[key]
+	if !ok {
 		return nil, fmt.Errorf("Unknown key '%s'", key)
-	} else {
-		return val, nil
 	}
+	return val, nil
 }
 
 func (r *dockerEnvironmentValueResolver) configureContainersEnv() error {
@@ -69,11 +69,10 @@ func (r *dockerEnvironmentValueResolver) resolve(templateText string) (string, e
 	envContextVariables, err := r.getEnvironmentContextVariables()
 	if err != nil {
 		return "", err
-	} else {
-		// overwrites the same key
-		for k, v := range envContextVariables {
-			contextVariables[k] = v
-		}
+	}
+	// overwrites the same key
+	for k, v := range envContextVariables {
+		contextVariables[k] = v
 	}
 	return r.resolveValue("resolve", templateText, contextVariables)
 }
@@ -160,9 +159,9 @@ func (r *dockerEnvironmentValueResolver) Port(componentName string, portName str
 		tpl = fmt.Sprintf(`{{ value . "%s.%s.%s"}}`, normalizeName(componentName), normalizeName(portName), qualifierPort)
 	}
 
-	if val, err := r.resolve(tpl); err != nil {
+	val, err := r.resolve(tpl)
+	if err != nil {
 		return 0, err
-	} else {
-		return strconv.Atoi(val)
 	}
+	return strconv.Atoi(val)
 }

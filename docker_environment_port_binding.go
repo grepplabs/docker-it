@@ -28,12 +28,12 @@ func (r *dockerEnvironmentPortBinding) configurePortBindings() error {
 		return err
 	}
 	for containerName, ports := range portBindings {
-		if container, err := r.context.getContainer(containerName); err != nil {
+		container, err := r.context.getContainer(containerName)
+		if err != nil {
 			return err
-		} else {
-			// container port bindings
-			container.portBindings = ports
 		}
+		// container port bindings
+		container.portBindings = ports
 	}
 	return nil
 }
@@ -62,9 +62,8 @@ func (r *dockerEnvironmentPortBinding) getNormalizedExposedPorts() (map[string][
 				if _, exists := namedPorts[portName]; exists {
 					return nil, fmt.Errorf("DockerComponent '%s' port name '%s' is configured twice",
 						containerName, portName)
-				} else {
-					namedPorts[portName] = struct{}{}
 				}
+				namedPorts[portName] = struct{}{}
 
 				ports = append(ports,
 					Port{

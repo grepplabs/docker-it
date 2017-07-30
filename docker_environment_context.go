@@ -60,11 +60,11 @@ func (r *dockerEnvironmentContext) addContainer(component DockerComponent) (*doc
 }
 
 func (r *dockerEnvironmentContext) getContainer(name string) (*dockerContainer, error) {
-	if container, exits := r.containers[normalizeName(name)]; !exits {
+	container, exits := r.containers[normalizeName(name)]
+	if !exits {
 		return nil, fmt.Errorf("DockerComponent [%s] is not configured", name)
-	} else {
-		return container, nil
 	}
+	return container, nil
 }
 
 // implements ValueResolver

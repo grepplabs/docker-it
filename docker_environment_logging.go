@@ -17,9 +17,8 @@ func (w logWriter) Write(b []byte) (int, error) {
 func stdoutWriter(prefix string) *logWriter {
 	if prefix != "" {
 		return &logWriter{log.New(os.Stdout, fmt.Sprintf("%s: ", prefix), 0)}
-	} else {
-		return &logWriter{log.New(os.Stdout, "", 0)}
 	}
+	return &logWriter{log.New(os.Stdout, "", 0)}
 }
 
 type logger struct {

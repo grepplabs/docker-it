@@ -106,12 +106,12 @@ func (r *DockerEnvironment) Destroy(names ...string) error {
 
 func (r *DockerEnvironment) forEach(f func(*dockerContainer) error, names ...string) error {
 	for _, name := range names {
-		if container, err := r.context.getContainer(name); err != nil {
+		container, err := r.context.getContainer(name)
+		if err != nil {
 			return err
-		} else {
-			if err := f(container); err != nil {
-				return err
-			}
+		}
+		if err := f(container); err != nil {
+			return err
 		}
 	}
 	return nil

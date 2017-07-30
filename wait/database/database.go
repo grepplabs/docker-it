@@ -34,15 +34,15 @@ func NewDatabaseWait(driverName string, databaseUrl string, options Options) *da
 
 // implements dockerit.Callback
 func (r *databaseWait) Call(componentName string, resolver dit.ValueResolver) error {
-	if url, err := resolver.Resolve(r.databaseUrl); err != nil {
+	url, err := resolver.Resolve(r.databaseUrl)
+	if err != nil {
 		return err
-	} else {
-		err := r.pollConnect(componentName, url)
-		if err != nil {
-			return fmt.Errorf("%s wait: failed to connect to %s %v ", r.driverName, url, err)
-		}
-		return nil
 	}
+	err = r.pollConnect(componentName, url)
+	if err != nil {
+		return fmt.Errorf("%s wait: failed to connect to %s %v ", r.driverName, url, err)
+	}
+	return nil
 }
 
 func (r *databaseWait) pollConnect(componentName string, url string) error {

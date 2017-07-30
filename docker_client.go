@@ -42,13 +42,13 @@ func (r *dockerClient) Close() error {
 
 func (r *dockerClient) GetContainerByID(containerID string) (*types.Container, error) {
 	options := types.ContainerListOptions{All: true}
-	if containers, err := r.client.ContainerList(context.Background(), options); err != nil {
+	containers, err := r.client.ContainerList(context.Background(), options)
+	if err != nil {
 		return nil, err
-	} else {
-		for _, container := range containers {
-			if container.ID == containerID {
-				return &container, nil
-			}
+	}
+	for _, container := range containers {
+		if container.ID == containerID {
+			return &container, nil
 		}
 	}
 	return nil, nil
@@ -59,12 +59,13 @@ func (r *dockerClient) GetImageByName(imageName string) (*types.ImageSummary, er
 	imageFilters := typesFilters.NewArgs()
 	imageFilters.Add("reference", imageName)
 	options := types.ImageListOptions{All: false, Filters: imageFilters}
-	if summaries, err := r.client.ImageList(context.Background(), options); err != nil {
+
+	summaries, err := r.client.ImageList(context.Background(), options)
+	if err != nil {
 		return nil, err
-	} else {
-		if len(summaries) != 0 {
-			return &summaries[0], nil
-		}
+	}
+	if len(summaries) != 0 {
+		return &summaries[0], nil
 	}
 	return nil, nil
 }
@@ -121,12 +122,12 @@ func (r *dockerClient) CreateContainer(containerName string, image string, env [
 		PortBindings: portBindings,
 	}
 
-	if body, err := r.client.ContainerCreate(context.Background(), &config, &hostConfig, nil, containerName); err != nil {
+	body, err := r.client.ContainerCreate(context.Background(), &config, &hostConfig, nil, containerName)
+	if err != nil {
 		return "", err
-	} else {
-		// return container ID
-		return body.ID, nil
 	}
+	// return container ID
+	return body.ID, nil
 }
 
 func (r *dockerClient) StartContainer(containerID string) error {

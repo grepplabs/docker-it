@@ -25,7 +25,7 @@ func (r *dockerLifecycleHandler) Close() {
 	r.context.logger.Info.Println("Closing docker lifecycle handler")
 
 	for _, container := range r.context.containers {
-		container.StopFollowLogs()
+		container.stopFollowLogs()
 	}
 	r.dockerClient.Close()
 }
@@ -104,7 +104,7 @@ func (r *dockerLifecycleHandler) Stop(container *dockerContainer) error {
 func (r *dockerLifecycleHandler) Destroy(container *dockerContainer) error {
 	r.context.logger.Info.Println("Destroy component", container.Name, "container", TruncateID(container.containerID))
 
-	container.StopFollowLogs()
+	container.stopFollowLogs()
 
 	if container.containerID == "" {
 		return nil

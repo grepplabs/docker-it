@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	DefaultTopic = "kafka-connectivity-test"
+	defaultTopic = "kafka-connectivity-test"
 )
 
+// Options defines Kafka wait parameters.
 type Options struct {
 	WaitOptions wait.Options
 	Topic       string
@@ -24,6 +25,7 @@ type kafkaWait struct {
 	topic              string
 }
 
+// NewKafkaWait creates a new Kafka wait
 func NewKafkaWait(brokerAddrTemplate string, options Options) *kafkaWait {
 	if brokerAddrTemplate == "" {
 		panic(errors.New("kafka wait: BrokerAddrTemplate must not be empty"))
@@ -31,7 +33,7 @@ func NewKafkaWait(brokerAddrTemplate string, options Options) *kafkaWait {
 
 	topic := options.Topic
 	if topic == "" {
-		topic = DefaultTopic
+		topic = defaultTopic
 	}
 	return &kafkaWait{
 		brokerAddrTemplate: brokerAddrTemplate,
@@ -114,7 +116,7 @@ func (r *kafkaWait) consume(brokerAddr string, partition int32) error {
 		return err
 	case _ = <-partitionConsumer.Messages():
 		return nil
-	case <-time.After(r.GetDelay()):
+	case <-time.After(r.GetPollInterval()):
 		return errors.New("Ping message was not received")
 	}
 }

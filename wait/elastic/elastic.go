@@ -8,6 +8,7 @@ import (
 	v5 "gopkg.in/olivere/elastic.v5"
 )
 
+// Options defines Elasticsearch wait parameters.
 type Options struct {
 	WaitOptions        wait.Options
 	Username, Password string
@@ -19,6 +20,7 @@ type elasticWait struct {
 	username, password string
 }
 
+// NewElasticWait creates a new Elasticsearch wait
 func NewElasticWait(urlTemplate string, options Options) *elasticWait {
 	if urlTemplate == "" {
 		panic(errors.New("elastic wait: UrlTemplate must not be empty"))

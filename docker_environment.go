@@ -9,6 +9,7 @@ import (
 	"syscall"
 )
 
+// DockerEnvironment holds defined docker components
 type DockerEnvironment struct {
 	context          *dockerEnvironmentContext
 	lifecycleHandler *dockerLifecycleHandler
@@ -16,7 +17,7 @@ type DockerEnvironment struct {
 
 	shutdownOnce sync.Once
 }
-
+// NewDockerEnvironment creates a new docker test environment
 func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, error) {
 	if len(components) == 0 {
 		return nil, errors.New("Component list is empty")
@@ -51,6 +52,7 @@ func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, er
 	return &DockerEnvironment{context: context, lifecycleHandler: lifecycleHandler}, nil
 }
 
+// Start starts docker components by starting docker containers
 func (r *DockerEnvironment) Start(names ...string) error {
 	if (len(names)) == 0 {
 		return errors.New("No component was provided to start")
@@ -58,6 +60,7 @@ func (r *DockerEnvironment) Start(names ...string) error {
 	return r.forEach(r.lifecycleHandler.Start, names...)
 }
 
+// StartParallel starts docker components in parallel
 func (r *DockerEnvironment) StartParallel(names ...string) error {
 	if (len(names)) == 0 {
 		return errors.New("No component was provided to start in parallel")
@@ -96,10 +99,12 @@ func (r *DockerEnvironment) StartParallel(names ...string) error {
 	return nil
 }
 
+// Stops stops docker components
 func (r *DockerEnvironment) Stop(names ...string) error {
 	return r.forEach(r.lifecycleHandler.Stop, names...)
 }
 
+// Destroy destroys docker components by destroying the containers
 func (r *DockerEnvironment) Destroy(names ...string) error {
 	return r.forEach(r.lifecycleHandler.Destroy, names...)
 }
@@ -117,20 +122,27 @@ func (r *DockerEnvironment) forEach(f func(*dockerContainer) error, names ...str
 	return nil
 }
 
+// Close closes docker environment lifecycle handle
 func (r *DockerEnvironment) Close() {
 	r.lifecycleHandler.Close()
 }
 
+// Resolve executes the template applying the environment context as data object
 func (r *DockerEnvironment) Resolve(template string) (string, error) {
 	return r.context.Resolve(template)
 }
+
+// Host provides external IP of docker containers
 func (r *DockerEnvironment) Host() string {
 	return r.context.Host()
 }
+
+// Port provides port number for a given component and named port
 func (r *DockerEnvironment) Port(componentName string, portName string) (int, error) {
 	return r.context.Port(componentName, portName)
 }
 
+// WithShutdown registers callback invoked after SIGINT or SIGTERM were received
 func (r *DockerEnvironment) WithShutdown(beforeShutdown ...func()) chan struct{} {
 	doneChannel := make(chan struct{}, 1)
 	signalChannel := make(chan error)
@@ -156,6 +168,7 @@ func (r *DockerEnvironment) WithShutdown(beforeShutdown ...func()) chan struct{}
 	return doneChannel
 }
 
+// Shutdown stops and destroys environment containers and closes life cycle handler
 func (r *DockerEnvironment) Shutdown(beforeShutdown ...func()) {
 	r.shutdownOnce.Do(func() {
 		if len(beforeShutdown) > 0 {

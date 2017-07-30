@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// Options defines MySQL wait parameters.
 type Options struct {
 	WaitOptions wait.Options
 }
@@ -17,6 +18,7 @@ type mySQLWait struct {
 	databaseUrl string
 }
 
+// NewMySQLWait creates a new MySQL wait
 func NewMySQLWait(databaseUrl string, options Options) *mySQLWait {
 	if databaseUrl == "" {
 		panic(errors.New("mysql wait: DatabaseUrl must not be empty"))

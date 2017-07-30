@@ -14,6 +14,7 @@ const (
 	defaultMethod = "GET"
 )
 
+// Options defines Http wait parameters.
 type Options struct {
 	WaitOptions wait.Options
 	Method      string
@@ -25,6 +26,7 @@ type httpWait struct {
 	urlTemplate string
 }
 
+// NewHttpWait creates a new Http wait
 func NewHttpWait(urlTemplate string, options Options) *httpWait {
 	if urlTemplate == "" {
 		panic(errors.New("http wait: UrlTemplate must not be empty"))

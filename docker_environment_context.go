@@ -79,7 +79,7 @@ func (r *dockerEnvironmentContext) Host() string {
 
 // implements ValueResolver
 func (r *dockerEnvironmentContext) Port(componentName string, portName string) (int, error) {
-	return r.getValueResolver().Port(componentName, portName)
+	return r.getValueResolver().port(componentName, portName)
 }
 
 // https://play.golang.org/p/BDt3qEQ_2H

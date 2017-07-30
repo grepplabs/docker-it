@@ -29,10 +29,10 @@ func TestStopFollowLogsIsNonBlocking(t *testing.T) {
 		}
 	}()
 
-	container.StopFollowLogs()
+	container.stopFollowLogs()
 	wg.Wait()
 
 	for i := 0; i < 3; i++ {
-		container.StopFollowLogs()
+		container.stopFollowLogs()
 	}
 }

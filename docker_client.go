@@ -58,7 +58,7 @@ func (r *dockerClient) GetImageByName(imageName string) (*types.ImageSummary, er
 	// https://docs.docker.com/engine/api/v1.29/#operation/ImageList
 	imageFilters := typesFilters.NewArgs()
 	imageFilters.Add("reference", imageName)
-	options := types.ImageListOptions{Filters: imageFilters}
+	options := types.ImageListOptions{All: false, Filters: imageFilters}
 	if summaries, err := r.client.ImageList(context.Background(), options); err != nil {
 		return nil, err
 	} else {
@@ -70,10 +70,18 @@ func (r *dockerClient) GetImageByName(imageName string) (*types.ImageSummary, er
 }
 
 func (r *dockerClient) RemoveImageByName(imageName string) error {
-	if summary, err := r.GetImageByName(imageName); err != nil {
+	// https://docs.docker.com/engine/api/v1.29/#operation/ImageList
+	imageFilters := typesFilters.NewArgs()
+	imageFilters.Add("reference", imageName)
+	options := types.ImageListOptions{All: false, Filters: imageFilters}
+	if summaries, err := r.client.ImageList(context.Background(), options); err != nil {
 		return err
-	} else if summary != nil {
-		return r.RemoveImage(summary.ID)
+	} else {
+		for _, summary := range summaries {
+			if err = r.RemoveImage(summary.ID); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

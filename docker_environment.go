@@ -17,6 +17,7 @@ type DockerEnvironment struct {
 
 	shutdownOnce sync.Once
 }
+
 // NewDockerEnvironment creates a new docker test environment
 func NewDockerEnvironment(components ...DockerComponent) (*DockerEnvironment, error) {
 	if len(components) == 0 {

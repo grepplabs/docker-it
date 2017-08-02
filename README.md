@@ -4,6 +4,7 @@ golang library for integration testing with Docker
 [![Build Status](https://travis-ci.org/cloud-42/docker-it.svg?branch=master)](https://travis-ci.org/cloud-42/docker-it)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cloud-42/docker-it)](https://goreportcard.com/report/github.com/cloud-42/docker-it)
 [![Coverage Status](https://coveralls.io/repos/github/cloud-42/docker-it/badge.svg?branch=master)](https://coveralls.io/github/cloud-42/docker-it?branch=master)
+[![GoDoc](https://godoc.org/github.com/cloud-42/docker-it?status.svg)](https://godoc.org/github.com/cloud-42/docker-it)
 
 This utility library allows you to create a test environment based on docker containers:
 

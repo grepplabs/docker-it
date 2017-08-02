@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Options defines database wait parameters.
 type Options struct {
 	WaitOptions wait.Options
 }
@@ -18,6 +19,7 @@ type databaseWait struct {
 	databaseUrl string
 }
 
+// NewDatabaseWait creates a new database wait
 func NewDatabaseWait(driverName string, databaseUrl string, options Options) *databaseWait {
 	if driverName == "" {
 		panic(errors.New("database wait: DatabaseUrl must not be empty"))

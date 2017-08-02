@@ -14,7 +14,7 @@ func newDockerContainer(component DockerComponent) *dockerContainer {
 	return &dockerContainer{DockerComponent: component, stopFollowLogsChannel: make(chan struct{}, 1)}
 }
 
-func (r *dockerContainer) StopFollowLogs() {
+func (r *dockerContainer) stopFollowLogs() {
 	select {
 	case r.stopFollowLogsChannel <- struct{}{}:
 	default:

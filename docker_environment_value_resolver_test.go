@@ -179,14 +179,14 @@ func TestResolveUsingContextVariables(t *testing.T) {
 	a.Nil(err)
 	a.Equal(`redis://192.168.178.44:26379`, value)
 
-	_, err = resolver.Port("", "")
+	_, err = resolver.port("", "")
 	a.EqualError(err, "Port value resolver: component name is empty")
 
-	port, err := resolver.Port("redis", "")
+	port, err := resolver.port("redis", "")
 	a.Nil(err)
 	a.Equal(32401, port)
 
-	port, err = resolver.Port("redis", "sentinel")
+	port, err = resolver.port("redis", "sentinel")
 	a.Nil(err)
 	a.Equal(32402, port)
 }

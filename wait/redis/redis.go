@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Options defines Redis wait parameters.
 type Options struct {
 	WaitOptions wait.Options
 	PortName    string
@@ -18,6 +19,7 @@ type redisWait struct {
 	portName string
 }
 
+// NewRedisWait creates a new Redis wait
 func NewRedisWait(options Options) *redisWait {
 	return &redisWait{
 		Wait:     wait.NewWait(options.WaitOptions),

@@ -18,7 +18,7 @@ var dockerEnvironment, dockerEnvironment2 *dit.DockerEnvironment
 
 func init() {
 	// ensure docker API version
-	dit.SetDefaultDockerApiVersion()
+	dit.SetDefaultDockerAPIVersion()
 
 	dockerEnvironment = newDockerEnvironment()
 	dockerEnvironment2 = newDockerEnvironment2()

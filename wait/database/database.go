@@ -16,27 +16,27 @@ type Options struct {
 type databaseWait struct {
 	wait.Wait
 	driverName  string
-	databaseUrl string
+	databaseURL string
 }
 
 // NewDatabaseWait creates a new database wait
-func NewDatabaseWait(driverName string, databaseUrl string, options Options) *databaseWait {
+func NewDatabaseWait(driverName string, databaseURL string, options Options) *databaseWait {
 	if driverName == "" {
 		panic(errors.New("database wait: DatabaseUrl must not be empty"))
 	}
-	if databaseUrl == "" {
+	if databaseURL == "" {
 		panic(errors.New("database wait: DriverName must not be empty"))
 	}
 	return &databaseWait{
 		Wait:        wait.NewWait(options.WaitOptions),
 		driverName:  driverName,
-		databaseUrl: databaseUrl,
+		databaseURL: databaseURL,
 	}
 }
 
 // implements dockerit.Callback
 func (r *databaseWait) Call(componentName string, resolver dit.ValueResolver) error {
-	url, err := resolver.Resolve(r.databaseUrl)
+	url, err := resolver.Resolve(r.databaseURL)
 	if err != nil {
 		return err
 	}

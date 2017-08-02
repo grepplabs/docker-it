@@ -14,7 +14,7 @@ type dockerLifecycleHandler struct {
 }
 
 func newDockerLifecycleHandler(context *dockerEnvironmentContext) (*dockerLifecycleHandler, error) {
-	dockerClient, err := NewDockerClient()
+	dockerClient, err := newDockerClient()
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (r *dockerLifecycleHandler) fetchLogs(containerID string, dstout, dsterr io
 }
 
 func (r *dockerLifecycleHandler) followLogs(container *dockerContainer, dstout, dsterr io.Writer) error {
-	followClient, err := NewDockerClient()
+	followClient, err := newDockerClient()
 	if err != nil {
 		return err
 	}

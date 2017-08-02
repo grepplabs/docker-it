@@ -16,24 +16,24 @@ type Options struct {
 
 type postgresWait struct {
 	waitOptions wait.Options
-	databaseUrl string
+	databaseURL string
 }
 
 // NewPostgresWait creates a new PostgreSQL wait
-func NewPostgresWait(databaseUrl string, options Options) *postgresWait {
-	if databaseUrl == "" {
+func NewPostgresWait(databaseURL string, options Options) *postgresWait {
+	if databaseURL == "" {
 		panic(errors.New("postgres wait: DatabaseUrl must not be empty"))
 	}
 	return &postgresWait{
 		waitOptions: options.WaitOptions,
-		databaseUrl: databaseUrl,
+		databaseURL: databaseURL,
 	}
 }
 
 // implements dockerit.Callback
 func (r *postgresWait) Call(componentName string, resolver dit.ValueResolver) error {
 	databaseWait := database.NewDatabaseWait(
-		"postgres", r.databaseUrl,
+		"postgres", r.databaseURL,
 		database.Options{
 			WaitOptions: r.waitOptions,
 		})

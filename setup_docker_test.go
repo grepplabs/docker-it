@@ -7,7 +7,7 @@ import (
 
 func init() {
 	// ensure docker API version
-	SetDefaultDockerApiVersion()
+	SetDefaultDockerAPIVersion()
 }
 
 func TestMain(m *testing.M) {

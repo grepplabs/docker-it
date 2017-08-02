@@ -29,14 +29,14 @@ func TestDockerLifecycleHandler(t *testing.T) {
 	a.Nil(err)
 
 	err = handler.Create(container)
-	containerId1 := container.containerID
+	containerID1 := container.containerID
 	a.Nil(err)
 	a.NotEmpty(container.containerID)
 
 	// next create has no effect
 	err = handler.Create(container)
 	a.Nil(err)
-	a.Equal(containerId1, container.containerID)
+	a.Equal(containerID1, container.containerID)
 
 	err = handler.checkOrPullDockerImage(testImage, false)
 	a.Nil(err)
@@ -102,7 +102,7 @@ func TestDockerLifecycleHandler(t *testing.T) {
 
 	err = handler.Start(container)
 	a.Nil(err)
-	a.NotEqual(containerId1, container.containerID)
+	a.NotEqual(containerID1, container.containerID)
 
 	err = handler.Destroy(container)
 	a.Nil(err)

@@ -18,7 +18,7 @@ const (
 func TestDockerCommands(t *testing.T) {
 	a := assert.New(t)
 
-	dc, err := NewDockerClient()
+	dc, err := newDockerClient()
 	a.Nil(err)
 
 	_, err = dc.GetImageByName(testImage)

@@ -5,6 +5,7 @@ import (
 	dit "github.com/cloud-42/docker-it"
 	"github.com/cloud-42/docker-it/wait"
 	"github.com/cloud-42/docker-it/wait/database"
+	// the initialization registers mysql as a driver for the SQL interface.
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -15,24 +16,24 @@ type Options struct {
 
 type mySQLWait struct {
 	waitOptions wait.Options
-	databaseUrl string
+	databaseURL string
 }
 
 // NewMySQLWait creates a new MySQL wait
-func NewMySQLWait(databaseUrl string, options Options) *mySQLWait {
-	if databaseUrl == "" {
+func NewMySQLWait(databaseURL string, options Options) *mySQLWait {
+	if databaseURL == "" {
 		panic(errors.New("mysql wait: DatabaseUrl must not be empty"))
 	}
 	return &mySQLWait{
 		waitOptions: options.WaitOptions,
-		databaseUrl: databaseUrl,
+		databaseURL: databaseURL,
 	}
 }
 
 // implements dockerit.Callback
 func (r *mySQLWait) Call(componentName string, resolver dit.ValueResolver) error {
 	databaseWait := database.NewDatabaseWait(
-		"mysql", r.databaseUrl,
+		"mysql", r.databaseURL,
 		database.Options{
 			WaitOptions: r.waitOptions,
 		})

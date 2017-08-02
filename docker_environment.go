@@ -100,7 +100,7 @@ func (r *DockerEnvironment) StartParallel(names ...string) error {
 	return nil
 }
 
-// Stops stops docker components
+// Stop stops docker components
 func (r *DockerEnvironment) Stop(names ...string) error {
 	return r.forEach(r.lifecycleHandler.Stop, names...)
 }

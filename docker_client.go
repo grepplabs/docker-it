@@ -14,27 +14,27 @@ import (
 )
 
 const (
-	defaultDockerApiVersion = "1.25"
+	defaultDockerAPIVersion = "1.25"
 )
 
 type dockerClient struct {
 	client *client.Client
 }
 
-// SetDefaultDockerApiVersion sets environment variable DOCKER_API_VERSION to predefined default version
-func SetDefaultDockerApiVersion() {
+// SetDefaultDockerAPIVersion sets environment variable DOCKER_API_VERSION to predefined default version
+func SetDefaultDockerAPIVersion() {
 	// ensure docker API version
 	if os.Getenv("DOCKER_API_VERSION") == "" {
-		os.Setenv("DOCKER_API_VERSION", defaultDockerApiVersion)
+		os.Setenv("DOCKER_API_VERSION", defaultDockerAPIVersion)
 	}
 }
 
-// NewDockerClient initializes a new API docker.NewEnvClient client based on environment variables.
+// newDockerClient initializes a new API docker.NewEnvClient client based on environment variables.
 // Use DOCKER_HOST to set the url to the docker server.
 // Use DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
 // Use DOCKER_CERT_PATH to load the TLS certificates from.
 // Use DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
-func NewDockerClient() (*dockerClient, error) {
+func newDockerClient() (*dockerClient, error) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		return nil, err
@@ -85,13 +85,13 @@ func (r *dockerClient) RemoveImageByName(imageName string) error {
 	imageFilters := typesFilters.NewArgs()
 	imageFilters.Add("reference", imageName)
 	options := types.ImageListOptions{All: false, Filters: imageFilters}
-	if summaries, err := r.client.ImageList(context.Background(), options); err != nil {
+	summaries, err := r.client.ImageList(context.Background(), options)
+	if err != nil {
 		return err
-	} else {
-		for _, summary := range summaries {
-			if err = r.RemoveImage(summary.ID); err != nil {
-				return err
-			}
+	}
+	for _, summary := range summaries {
+		if err = r.RemoveImage(summary.ID); err != nil {
+			return err
 		}
 	}
 	return nil

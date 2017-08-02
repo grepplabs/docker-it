@@ -49,14 +49,14 @@ func (r *httpWait) Call(componentName string, resolver dit.ValueResolver) error 
 	if err != nil {
 		return err
 	}
-	err = r.pollHttp(componentName, url)
+	err = r.pollHTTP(componentName, url)
 	if err != nil {
 		return fmt.Errorf("http wait: failed to connect to %s %v ", url, err)
 	}
 	return nil
 }
 
-func (r *httpWait) pollHttp(componentName string, url string) error {
+func (r *httpWait) pollHTTP(componentName string, url string) error {
 
 	logger := r.GetLogger(componentName)
 	logger.Println("Waiting for http", url)

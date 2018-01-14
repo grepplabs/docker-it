@@ -26,7 +26,7 @@
 
 [[constraint]]
   name = "github.com/docker/docker"
-  version = "1.13.1"
+  version = "v17.03.2-ce"
 
 [[constraint]]
   name = "github.com/docker/go-connections"

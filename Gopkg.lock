@@ -51,8 +51,8 @@
     "pkg/stringid",
     "pkg/tlsconfig"
   ]
-  revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
-  version = "v1.13.1"
+  revision = "eef6495eddab52828327aade186443681ed71a4e"
+  version = "v17.03.2-ce-rc1"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -200,6 +200,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2f5bff9b693189e3f8f9dd23ed22c782a6becb4a29014c771f1f510fb74d9959"
+  inputs-digest = "dcc8e9e705ff67e068e52e0086d3503fcc2e4a18c2f38f209da66c963d2a564c"
   solver-name = "gps-cdcl"
   solver-version = 1

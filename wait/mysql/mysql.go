@@ -2,9 +2,9 @@ package mysql
 
 import (
 	"errors"
-	dit "github.com/cloud-42/docker-it"
-	"github.com/cloud-42/docker-it/wait"
-	"github.com/cloud-42/docker-it/wait/database"
+	dit "github.com/grepplabs/docker-it"
+	"github.com/grepplabs/docker-it/wait"
+	"github.com/grepplabs/docker-it/wait/database"
 	// the initialization registers mysql as a driver for the SQL interface.
 	_ "github.com/go-sql-driver/mysql"
 )

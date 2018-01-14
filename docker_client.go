@@ -10,12 +10,8 @@ import (
 	"github.com/docker/go-connections/nat"
 	"io"
 	"io/ioutil"
-	"os"
 )
 
-const (
-	defaultDockerAPIVersion = "1.25"
-)
 
 type dockerClient struct {
 	client *client.Client
@@ -23,10 +19,6 @@ type dockerClient struct {
 
 // SetDefaultDockerAPIVersion sets environment variable DOCKER_API_VERSION to predefined default version
 func SetDefaultDockerAPIVersion() {
-	// ensure docker API version
-	if os.Getenv("DOCKER_API_VERSION") == "" {
-		os.Setenv("DOCKER_API_VERSION", defaultDockerAPIVersion)
-	}
 }
 
 // newDockerClient initializes a new API docker.NewEnvClient client based on environment variables.

@@ -1,14 +1,14 @@
 package testexamples
 
 import (
-	dit "github.com/cloud-42/docker-it"
-	"github.com/cloud-42/docker-it/wait"
-	"github.com/cloud-42/docker-it/wait/elastic"
-	"github.com/cloud-42/docker-it/wait/http"
-	"github.com/cloud-42/docker-it/wait/kafka"
-	"github.com/cloud-42/docker-it/wait/mysql"
-	"github.com/cloud-42/docker-it/wait/postgres"
-	"github.com/cloud-42/docker-it/wait/redis"
+	dit "github.com/grepplabs/docker-it"
+	"github.com/grepplabs/docker-it/wait"
+	"github.com/grepplabs/docker-it/wait/elastic"
+	"github.com/grepplabs/docker-it/wait/http"
+	"github.com/grepplabs/docker-it/wait/kafka"
+	"github.com/grepplabs/docker-it/wait/mysql"
+	"github.com/grepplabs/docker-it/wait/postgres"
+	"github.com/grepplabs/docker-it/wait/redis"
 	"os"
 	"testing"
 	"time"
@@ -17,9 +17,6 @@ import (
 var dockerEnvironment, dockerEnvironment2 *dit.DockerEnvironment
 
 func init() {
-	// ensure docker API version
-	dit.SetDefaultDockerAPIVersion()
-
 	dockerEnvironment = newDockerEnvironment()
 	dockerEnvironment2 = newDockerEnvironment2()
 

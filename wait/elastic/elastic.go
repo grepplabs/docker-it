@@ -2,8 +2,8 @@ package elastic
 
 import (
 	"fmt"
-	dit "github.com/cloud-42/docker-it"
-	"github.com/cloud-42/docker-it/wait"
+	dit "github.com/grepplabs/docker-it"
+	"github.com/grepplabs/docker-it/wait"
 	"github.com/pkg/errors"
 	v5 "gopkg.in/olivere/elastic.v5"
 )

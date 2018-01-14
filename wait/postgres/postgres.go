@@ -1,9 +1,9 @@
 package postgres
 
 import (
-	dit "github.com/cloud-42/docker-it"
-	"github.com/cloud-42/docker-it/wait"
-	"github.com/cloud-42/docker-it/wait/database"
+	dit "github.com/grepplabs/docker-it"
+	"github.com/grepplabs/docker-it/wait"
+	"github.com/grepplabs/docker-it/wait/database"
 	// the initialization registers pq as a driver for the SQL interface.
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"

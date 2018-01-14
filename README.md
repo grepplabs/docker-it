@@ -1,10 +1,10 @@
 # docker-it - integration testing with Docker
 golang library for integration testing with Docker
 
-[![Build Status](https://travis-ci.org/cloud-42/docker-it.svg?branch=master)](https://travis-ci.org/cloud-42/docker-it)
-[![Go Report Card](https://goreportcard.com/badge/github.com/cloud-42/docker-it)](https://goreportcard.com/report/github.com/cloud-42/docker-it)
-[![Coverage Status](https://coveralls.io/repos/github/cloud-42/docker-it/badge.svg?branch=master)](https://coveralls.io/github/cloud-42/docker-it?branch=master)
-[![GoDoc](https://godoc.org/github.com/cloud-42/docker-it?status.svg)](https://godoc.org/github.com/cloud-42/docker-it)
+[![Build Status](https://travis-ci.org/grepplabs/docker-it.svg?branch=master)](https://travis-ci.org/grepplabs/docker-it)
+[![Go Report Card](https://goreportcard.com/badge/github.com/grepplabs/docker-it)](https://goreportcard.com/report/github.com/grepplabs/docker-it)
+[![Coverage Status](https://coveralls.io/repos/github/grepplabs/docker-it/badge.svg?branch=master)](https://coveralls.io/github/grepplabs/docker-it?branch=master)
+[![GoDoc](https://godoc.org/github.com/grepplabs/docker-it?status.svg)](https://godoc.org/github.com/grepplabs/docker-it)
 
 This utility library allows you to create a test environment based on docker containers:
 
@@ -18,7 +18,7 @@ This utility library allows you to create a test environment based on docker con
  
 Prerequisites
 ========
-[Go 1.7 or higher](https://golang.org/doc/install)  
+[Go 1.9 or higher](https://golang.org/doc/install)  
 [Docker](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
 
 Building
@@ -26,27 +26,13 @@ Building
 
 ```bash
 $ export GOPATH=$(pwd)    # first set GOPATH if not done already
-$ go get -d github.com/cloud-42/docker-it
-$ go get github.com/Masterminds/glide
-$ cd $GOPATH/src/github.com/cloud-42/docker-it
-$ glide install -v
+$ go get -d github.com/grepplabs/docker-it
+$ go get -u github.com/golang/dep/cmd/dep
+$ cd $GOPATH/src/github.com/grepplabs/docker-it
+$ dep ensure
 $ go build .
 $ go test -v ./
 $ go test -v ./test-examples/...
-```
-
-Compiling with vendoring
-========
-You must use vendoring and strip vendor directories when compiling your code.
-
-[Setting Ports in a container config no longer compiles#28269](https://github.com/moby/moby/issues/28269)
-
-
-```bash
-$ glide create                            # Start a new workspace
-$ glide install -v                        # Install packages and dependencies + strip-vendor
-$ go build                                # Go tools work normally
-$ glide up                                # Update to newest versions of the package
 ```
 
 Example usage
@@ -57,10 +43,10 @@ Define your test environment
 package mytestwithdocker
 
 import (
-	dit "github.com/cloud-42/docker-it"
-	"github.com/cloud-42/docker-it/wait"
-	"github.com/cloud-42/docker-it/wait/elastic"
-	"github.com/cloud-42/docker-it/wait/redis"
+	dit "github.com/grepplabs/docker-it"
+	"github.com/grepplabs/docker-it/wait"
+	"github.com/grepplabs/docker-it/wait/elastic"
+	"github.com/grepplabs/docker-it/wait/redis"
 	"testing"
 	"time"
 )
@@ -188,7 +174,7 @@ You can use `func TestMain(m *testing.M)` to start your environment before and s
 package testexamples
 
 import (
-	dit "github.com/cloud-42/docker-it"
+	dit "github.com/grepplabs/docker-it"
 	"os"
 	"testing"
 )
@@ -230,7 +216,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 
 Test examples
 ========
-Run [test-examples](https://github.com/cloud-42/docker-it/tree/master/test-examples)
+Run [test-examples](https://github.com/grepplabs/docker-it/tree/master/test-examples)
 
 * HTTP
 * Elasticsearch

@@ -17,10 +17,6 @@ type dockerClient struct {
 	client *client.Client
 }
 
-// SetDefaultDockerAPIVersion sets environment variable DOCKER_API_VERSION to predefined default version
-func SetDefaultDockerAPIVersion() {
-}
-
 // newDockerClient initializes a new API docker.NewEnvClient client based on environment variables.
 // Use DOCKER_HOST to set the url to the docker server.
 // Use DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.

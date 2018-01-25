@@ -1,6 +1,7 @@
 package testexamples
 
 import (
+	"fmt"
 	dit "github.com/grepplabs/docker-it"
 	"github.com/grepplabs/docker-it/wait"
 	"github.com/grepplabs/docker-it/wait/elastic"
@@ -10,6 +11,9 @@ import (
 	"github.com/grepplabs/docker-it/wait/postgres"
 	"github.com/grepplabs/docker-it/wait/redis"
 	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -32,6 +36,9 @@ func TestMain(m *testing.M) {
 		"it-es",
 		"it-vault",
 	}
+
+	go handleInterrupt()
+
 	if err := dockerEnvironment.StartParallel(components...); err != nil {
 		dockerEnvironment.Shutdown()
 		panic(err)
@@ -50,6 +57,15 @@ func TestMain(m *testing.M) {
 }
 
 func newDockerEnvironment() *dit.DockerEnvironment {
+	pwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	_, err = os.Stat(filepath.Join(pwd, "vault_config.hcl"))
+	if os.IsNotExist(err) {
+		panic(err)
+	}
+
 	env, err := dit.NewDockerEnvironment(
 		dit.DockerComponent{
 			Name:       "it-redis",
@@ -165,18 +181,17 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 			Name:       "it-vault",
 			Image:      "vault:0.9.1",
 			ForcePull:  true,
-			FollowLogs: false,
+			FollowLogs: true,
 			ExposedPorts: []dit.Port{
 				{
 					ContainerPort: 8200,
 				},
 			},
-			EnvironmentVariables: map[string]string{
-				"VAULT_ADDR": "http://127.0.0.1:8200",
-			},
-
 			Cmd: []string{
-				"server", "-dev",
+				"server", "-dev", "-config=/etc/vault/vault_config.hcl",
+			},
+			Binds: []string{
+				fmt.Sprintf("%s:%s", pwd, "/etc/vault"),
 			},
 			AfterStart: http.NewHttpWait(
 				`http://{{ value . "it-vault.Host"}}:{{ value . "it-vault.Port"}}/v1/sys/seal-status`,
@@ -210,4 +225,13 @@ func newDockerEnvironment2() *dit.DockerEnvironment {
 		panic(err)
 	}
 	return env
+}
+
+func handleInterrupt() {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	<-signals
+	println("FATAL: Stop signal was received")
+	dockerEnvironment.Shutdown()
+	os.Exit(1)
 }

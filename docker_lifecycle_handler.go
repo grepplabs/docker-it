@@ -211,8 +211,8 @@ func (r *dockerLifecycleHandler) createDockerContainer(container *dockerContaine
 		cmd = append(cmd, container.Cmd...)
 	}
 
-	r.context.logger.Info.Println("Creating container for", container.Name, "name", containerName, "env", env, "portSpecs", portSpecs, "cmd", cmd)
-	containerID, err := r.dockerClient.CreateContainer(containerName, container.Image, env, portSpecs, cmd)
+	r.context.logger.Info.Println("Creating container for", container.Name, "name", containerName, "env", env, "portSpecs", portSpecs, "cmd", cmd, "binds", container.Binds)
+	containerID, err := r.dockerClient.CreateContainer(containerName, container.Image, env, portSpecs, cmd, container.Binds)
 	if err != nil {
 		return err
 	}

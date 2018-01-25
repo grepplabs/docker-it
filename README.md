@@ -14,6 +14,7 @@ This utility library allows you to create a test environment based on docker con
 * Full control of the container lifecycle - you can stop and restart a container to test connectivity problems
 * Follow container log output
 * Define a wait for container application startup before your tests start
+* Bind mounts
 * Use DOCKER_API_VERSION environment variable to set API version
  
 Prerequisites
@@ -102,9 +103,11 @@ func TestWithDocker(t *testing.T) {
 			EnvironmentVariables: map[string]string{
 				"VAULT_ADDR": "http://127.0.0.1:8200",
 			},
-
 			Cmd: []string{
-				"server", "-dev",
+				"server", "-dev", "-config=/etc/vault/vault_config.hcl",
+			},
+			Binds: []string{
+				"/tmp/vault_config.hcl", "/etc/vault",
 			},
 			AfterStart: http.NewHttpWait(
 				`http://{{ value . "it-vault.Host"}}:{{ value . "it-vault.Port"}}/v1/sys/seal-status`,
@@ -247,6 +250,7 @@ Run [test-examples](https://github.com/grepplabs/docker-it/tree/master/test-exam
 * Postgres
 * Kafka
 * Redis
+* Vault
 
 ```bash
 go test -v ./test-examples/...

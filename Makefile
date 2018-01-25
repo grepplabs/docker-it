@@ -20,3 +20,4 @@ test: build
 test.exmaples: build
 	go test -v ./test-examples/...
 
+test.all: test test.exmaples

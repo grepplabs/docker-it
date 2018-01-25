@@ -108,7 +108,7 @@ func (r *dockerClient) PullImage(imageName string) error {
 }
 
 // CreateContainer creates a new container.
-func (r *dockerClient) CreateContainer(containerName string, image string, env []string, portSpecs []string, cmd []string) (string, error) {
+func (r *dockerClient) CreateContainer(containerName string, image string, env []string, portSpecs []string, cmd []string, binds []string) (string, error) {
 	// ip:public:private/proto
 	exposedPorts, portBindings, err := nat.ParsePortSpecs(portSpecs)
 	if err != nil {
@@ -122,6 +122,7 @@ func (r *dockerClient) CreateContainer(containerName string, image string, env [
 	}
 	hostConfig := typesContainer.HostConfig{
 		PortBindings: portBindings,
+		Binds:        binds,
 	}
 
 	body, err := r.client.ContainerCreate(context.Background(), &config, &hostConfig, nil, containerName)

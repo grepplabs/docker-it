@@ -2,9 +2,9 @@ package redis
 
 import (
 	"fmt"
+	"github.com/garyburd/redigo/redis"
 	dit "github.com/grepplabs/docker-it"
 	"github.com/grepplabs/docker-it/wait"
-	"github.com/garyburd/redigo/redis"
 	"time"
 )
 

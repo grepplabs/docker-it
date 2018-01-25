@@ -30,6 +30,7 @@ func TestMain(m *testing.M) {
 		"it-mysql",
 		"it-kafka",
 		"it-es",
+		"it-vault",
 	}
 	if err := dockerEnvironment.StartParallel(components...); err != nil {
 		dockerEnvironment.Shutdown()
@@ -158,6 +159,28 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 					Username:    "elastic",
 					Password:    "changeme",
 				},
+			),
+		},
+		dit.DockerComponent{
+			Name:       "it-vault",
+			Image:      "vault:0.9.1",
+			ForcePull:  true,
+			FollowLogs: false,
+			ExposedPorts: []dit.Port{
+				{
+					ContainerPort: 8200,
+				},
+			},
+			EnvironmentVariables: map[string]string{
+				"VAULT_ADDR": "http://127.0.0.1:8200",
+			},
+
+			Cmd: []string{
+				"server", "-dev",
+			},
+			AfterStart: http.NewHttpWait(
+				`http://{{ value . "it-vault.Host"}}:{{ value . "it-vault.Port"}}/v1/sys/seal-status`,
+				http.Options{},
 			),
 		},
 	)

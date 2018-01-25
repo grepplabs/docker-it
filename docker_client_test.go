@@ -48,7 +48,8 @@ func TestDockerCommands(t *testing.T) {
 	containerName := fmt.Sprintf("test-busybox-%s", salt)
 
 	env := []string{}
-	containerID, err := dc.CreateContainer(containerName, testImage, env, portSpecs)
+	cmd := []string{}
+	containerID, err := dc.CreateContainer(containerName, testImage, env, portSpecs, cmd)
 	a.Nil(err)
 
 	container, err := dc.GetContainerByID(containerID)

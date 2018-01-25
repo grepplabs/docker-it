@@ -14,6 +14,8 @@ type DockerComponent struct {
 	ExposedPorts []Port
 	// Container environment variables
 	EnvironmentVariables map[string]string
+	// Command to run when starting the container
+	Cmd []string
 	// Follow container log output
 	FollowLogs bool
 	// Callback invoked after start container command was invoked.

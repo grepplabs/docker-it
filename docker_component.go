@@ -16,6 +16,8 @@ type DockerComponent struct {
 	EnvironmentVariables map[string]string
 	// Command to run when starting the container
 	Cmd []string
+	// List of volume bindings for this container
+	Binds []string
 	// Follow container log output
 	FollowLogs bool
 	// Callback invoked after start container command was invoked.

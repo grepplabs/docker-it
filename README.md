@@ -47,6 +47,7 @@ import (
 	"github.com/grepplabs/docker-it/wait"
 	"github.com/grepplabs/docker-it/wait/elastic"
 	"github.com/grepplabs/docker-it/wait/redis"
+	"github.com/grepplabs/docker-it/wait/http"
 	"testing"
 	"time"
 )
@@ -88,11 +89,33 @@ func TestWithDocker(t *testing.T) {
 				},
 			),
 		},
+		dit.DockerComponent{
+			Name:       "it-vault",
+			Image:      "vault:0.9.1",
+			ForcePull:  true,
+			FollowLogs: false,
+			ExposedPorts: []dit.Port{
+				{
+					ContainerPort: 8200,
+				},
+			},
+			EnvironmentVariables: map[string]string{
+				"VAULT_ADDR": "http://127.0.0.1:8200",
+			},
+
+			Cmd: []string{
+				"server", "-dev",
+			},
+			AfterStart: http.NewHttpWait(
+				`http://{{ value . "it-vault.Host"}}:{{ value . "it-vault.Port"}}/v1/sys/seal-status`,
+				http.Options{},
+			),
+		},		
 	)
 	if err != nil {
 		panic(err)
 	}
-	if err != env.StartParallel("it-redis", "it-es") {
+	if err != env.StartParallel("it-redis", "it-es", "it-vault") {
 		panic(err)
 	}
 

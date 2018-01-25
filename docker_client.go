@@ -5,13 +5,13 @@ import (
 	"github.com/docker/docker/api/types"
 	typesContainer "github.com/docker/docker/api/types/container"
 	typesFilters "github.com/docker/docker/api/types/filters"
+	typesStrslice "github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stringid"
 	"github.com/docker/go-connections/nat"
 	"io"
 	"io/ioutil"
 )
-
 
 type dockerClient struct {
 	client *client.Client
@@ -108,7 +108,7 @@ func (r *dockerClient) PullImage(imageName string) error {
 }
 
 // CreateContainer creates a new container.
-func (r *dockerClient) CreateContainer(containerName string, image string, env []string, portSpecs []string) (string, error) {
+func (r *dockerClient) CreateContainer(containerName string, image string, env []string, portSpecs []string, cmd []string) (string, error) {
 	// ip:public:private/proto
 	exposedPorts, portBindings, err := nat.ParsePortSpecs(portSpecs)
 	if err != nil {
@@ -118,6 +118,7 @@ func (r *dockerClient) CreateContainer(containerName string, image string, env [
 		Image:        image,
 		Env:          env,
 		ExposedPorts: exposedPorts,
+		Cmd:          typesStrslice.StrSlice(cmd),
 	}
 	hostConfig := typesContainer.HostConfig{
 		PortBindings: portBindings,

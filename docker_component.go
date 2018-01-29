@@ -18,6 +18,8 @@ type DockerComponent struct {
 	Cmd []string
 	// List of volume bindings for this container
 	Binds []string
+	// DNS server to lookup
+	DNSServer string
 	// Follow container log output
 	FollowLogs bool
 	// Callback invoked after start container command was invoked.

@@ -50,7 +50,8 @@ func TestDockerCommands(t *testing.T) {
 	env := []string{}
 	cmd := []string{}
 	binds := []string{}
-	containerID, err := dc.CreateContainer(containerName, testImage, env, portSpecs, cmd, binds)
+	dnsServer := ""
+	containerID, err := dc.CreateContainer(containerName, testImage, env, portSpecs, cmd, binds, dnsServer)
 	a.Nil(err)
 
 	container, err := dc.GetContainerByID(containerID)

@@ -197,6 +197,7 @@ func newDockerEnvironment() *dit.DockerEnvironment {
 				`http://{{ value . "it-vault.Host"}}:{{ value . "it-vault.Port"}}/v1/sys/seal-status`,
 				http.Options{},
 			),
+			DNSServer: "8.8.8.8",
 		},
 	)
 	if err != nil {
